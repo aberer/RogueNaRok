@@ -34,6 +34,20 @@ int wrapStrToL(char *string)
 }
 
 
+double wrapStrToDouble(char *string)
+{
+  int errno = 0; 
+  char *p; 
+  double result = strtod(string, &p);
+  if (errno != 0 || *p != 0 || p == string)
+    {
+      printf("Something went wrong parsing a number.");
+      exit(-1);
+    }
+  return result; 
+}
+
+
 int filexists(char *filename)
 {
   FILE *fp;

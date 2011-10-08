@@ -44,6 +44,7 @@ int processID;
 void  printVersionInfo(boolean toInfoFile);
 int wrapStrToL(char *string);
 void printBothOpen(const char* format, ... );
+double wrapStrToDouble(char *string);
 char *lowerTheString(char *string);
 FILE *getOutputFileFromString(char *fileName);
 double gettime(void);

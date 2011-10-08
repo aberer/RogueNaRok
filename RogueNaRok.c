@@ -37,16 +37,11 @@
 /* try to produce minimal dropsets */
 #define MIN_DROPSETS
 
-/* outputs */
-#define SERVER_OUTPUT
-#define KAREN_OUTPUT
-
 #define VANILLA_CONSENSUS_OPT  0
 #define ML_TREE_OPT 1
 #define MRE_CONSENSUS_OPT 2
 
 #define HASH_TABLE_SIZE_CONST 100
-#define MRE_STOP 0.95
 
 extern unsigned int *randForTaxa;
 
@@ -956,7 +951,6 @@ void fprintRogueNames(All *tr, FILE *file, IndexList *list)
 
 void printRogueInformationToFile( All *tr, FILE *rogueOutput, int bestCumEver, int *cumScores, Dropset **dropsetInRound)
 {
-#ifdef SERVER_OUTPUT
   int
     i=1,j; 
 
@@ -978,10 +972,6 @@ void printRogueInformationToFile( All *tr, FILE *rogueOutput, int bestCumEver, i
 	fprintf(rogueOutput, "%d\t%d\t%s\t%s\t%s\n", i, j, tr->nameList[j+1], "NA", "NA");
 	i++;
       }
-
-#else 
-  assert(0);
-#endif
 }
 
 
@@ -1324,7 +1314,7 @@ void evaluateDropset(HashTable *mergingHash, Dropset *dropset,Array *bipartition
 	IndexList *iI =  me->mergingBipartitions.many ;	
 	FOR_LIST(iI)
 	{
-	  /* assert(NOT NTH_BIT_IS_SET(bipsSeen, iI->index)); */
+	  assert(NOT NTH_BIT_IS_SET(bipsSeen, iI->index));
 	  if(NTH_BIT_IS_SET(bipsSeen, iI->index))
 	    {
 	      PR("problem:");
@@ -1484,11 +1474,15 @@ Dropset *evaluateEvents(HashTable *mergingHash, Array *bipartitionsById, Array *
 	{
 	  int drSize =  lengthIndexList(dropset->taxaToDrop),
 	    resSize = lengthIndexList(result->taxaToDrop);
-
-	  double oldQuality =  (double)((dropset->improvement / numberOfTrees) * resSize),
-	    newQuality = (double)((result->improvement / numberOfTrees) * drSize ); 
 	  
-	  if( (newQuality  <  oldQuality)
+	  double oldQuality =  labelPenalty == 0.0  
+	    ? result->improvement * drSize 
+	    :  (double)(result->improvement / (double)(computeSupport ?  numberOfTrees : 1.0)) - (double)resSize;
+	  double newQuality = labelPenalty == 0.0 
+	    ? dropset->improvement * resSize
+	    : (double)(dropset->improvement / (double)(computeSupport ? numberOfTrees : 1.0)) - (double)drSize; 
+	  
+	  if( (newQuality  >  oldQuality)
 	      || ((newQuality == oldQuality)
 #ifdef MIN_DROPSETS
 		  && drSize < resSize
@@ -1502,8 +1496,10 @@ Dropset *evaluateEvents(HashTable *mergingHash, Array *bipartitionsById, Array *
   free(htIter);
   freeListFlat(consensusBipsCanVanish);
 
-  if(result->improvement > 0)
+  if(labelPenalty == 0.0 && result->improvement > 0)
     return result;
+  else if(labelPenalty != 0.0 && (result->improvement / (computeSupport ? numberOfTrees : 1.0) - lengthIndexList(result->taxaToDrop))  > 0.0 )
+    return result; 
   else 
     return NULL;
 }
@@ -2036,6 +2032,9 @@ thresholds can vary substantially. DEFAULT: MR consensus\n");
   printf("-b\n\tInstead of trying to maximize the support in the consensus tree,\n\t\
 the RogueNaRok will try to maximize the number of bipartition in the\n\t\
 final tree by pruning taxa. DEFAULT: off\n");
+  printf("-L <factor>\n\ta weight factor to penalize for dropset size. \n\t\
+Factor=1 is Pattengale's criterion. The higher the value, the more \n\t\
+conservative the algorithm is in pruning taxa. DEFAULT: 0.0 (=RBIC)\n");
   printf("-s <dropsetSize>\n\tmaximum size of dropset per iteration. If\n\t\
 dropsetSize == n, then RogueNaRok will test in each iteration which\n\t\
 tuple of n taxa increases optimality criterion the most and prunes\n\t\
@@ -2109,7 +2108,7 @@ int main(int argc, char *argv[])
 	strcpy(workdir, optarg) ; 
 	break;
       case 'L':
-	labelPenalty = wrapStrToL(optarg); 
+	labelPenalty = wrapStrToDouble(optarg); 
 	break; 
       case 'c':
 	{
