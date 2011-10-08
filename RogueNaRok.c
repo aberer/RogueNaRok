@@ -21,7 +21,7 @@
 
 
 /* #define PRINT_VERY_VERBOSE */
-#define MYDEBUG
+/* #define MYDEBUG */
 
 #define PRINT_DROPSETS
 #define PRINT_TIME
@@ -34,8 +34,7 @@
    • complex merger events are never free'd
 */
 
-
-/* TODO implement this  switch */
+/* try to produce minimal dropsets */
 #define MIN_DROPSETS
 
 /* outputs */
@@ -58,8 +57,7 @@ int bitVectorLength,
   dropRound = 0, 
   taxaDropped = 0, 
   thresh, 
-  numberOfTrees, 
-  
+  numberOfTrees,   
   bestLastTime, 
   *cumScores, 
   cumScore = 0, 
@@ -76,7 +74,8 @@ BitVector *droppedTaxa,
   *neglectThose, 
   *paddingBits; 
 
-double timeInc; 
+double labelPenalty = 0., 
+  timeInc; 
 
 /* lazy */
 void getSupportGainedThreshold(MergingEvent *me, Array *bipartitionsById);
@@ -1470,7 +1469,6 @@ Dropset *evaluateEvents(HashTable *mergingHash, Array *bipartitionsById, Array *
       free(allDropsets);
     }
   
-  
   HashTableIterator *htIter;
   FOR_HASH(htIter, mergingHash)
     {      
@@ -1480,10 +1478,26 @@ Dropset *evaluateEvents(HashTable *mergingHash, Array *bipartitionsById, Array *
       if(rogueMode != MRE_CONSENSUS_OPT)
 	evaluateDropset(mergingHash, dropset, bipartitionsById, consensusBipsCanVanish);
 
-      if( NOT result
-	  || (((double)result->improvement / (double)lengthIndexList(result->taxaToDrop)) 
-	      < ((double)dropset->improvement / ((double)lengthIndexList(dropset->taxaToDrop)))) )
-	result = dropset; 
+      if(NOT result)
+	result = dropset;
+      else
+	{
+	  int drSize =  lengthIndexList(dropset->taxaToDrop),
+	    resSize = lengthIndexList(result->taxaToDrop);
+
+	  double oldQuality =  (double)((dropset->improvement / numberOfTrees) * resSize),
+	    newQuality = (double)((result->improvement / numberOfTrees) * drSize ); 
+	  
+	  if( (newQuality  <  oldQuality)
+	      || ((newQuality == oldQuality)
+#ifdef MIN_DROPSETS
+		  && drSize < resSize
+#else
+		  && drSize > resSize
+#endif
+		  ))
+	    result = dropset;
+	}
     }
   free(htIter);
   freeListFlat(consensusBipsCanVanish);
@@ -2060,7 +2074,7 @@ int main(int argc, char *argv[])
   programVersion = PROG_VERSION;
   programReleaseDate  = PROG_RELEASE_DATE;
   
-  while ((c = getopt (argc, argv, "i:t:n:x:whc:s:bT:")) != -1)
+  while ((c = getopt (argc, argv, "i:t:n:x:whc:s:bT:L:")) != -1)
     switch (c)
       {
       case 'i':
@@ -2094,6 +2108,9 @@ int main(int argc, char *argv[])
       case 'w':
 	strcpy(workdir, optarg) ; 
 	break;
+      case 'L':
+	labelPenalty = wrapStrToL(optarg); 
+	break; 
       case 'c':
 	{
 	  if( NOT strcmp(optarg, "MRE"))

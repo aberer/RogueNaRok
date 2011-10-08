@@ -138,7 +138,7 @@ void *workerThreadWait(void *tData)
   pinToCore(tid);
 #endif
  
-  printf("\nThis is worker thread number: %d\n", tid);
+  printf("This is worker thread number: %d\n", tid);
 
   while(1)
     {
