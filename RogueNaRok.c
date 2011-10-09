@@ -434,7 +434,19 @@ int getSupportOfMRETree(Array *bipartitionsById,  Dropset *dropset)
   List
     *mergingEvents = NULL; 
   if(dropset)
-    mergingEvents = (maxDropsetSize == 1 ) ? dropset->primeEvents : dropset->combinedEvents;     
+    {
+      if(maxDropsetSize == 1)
+	mergingEvents =  dropset->ownPrimeE; 
+      else
+	{
+	  List *iter = dropset->acquiredPrimeE ; 
+	  FOR_LIST(iter)
+	    APPEND(iter->value, mergingEvents);
+	  iter = dropset->complexEvents; 
+	  FOR_LIST(iter)
+	    APPEND(iter->value, mergingEvents);
+	}
+    }
   int
     i;
 
@@ -460,10 +472,7 @@ int getSupportOfMRETree(Array *bipartitionsById,  Dropset *dropset)
   List *meIter = mergingEvents ; 
   FOR_LIST(meIter)
   {
-    /* IndexList */
-    /*   *iter = meIter->mergingBipartitions; */
     MergingEvent *me = meIter->value; 
-
     if(me->isComplex)
       {
 	IndexList *iter = me->mergingBipartitions.many; 
@@ -518,10 +527,13 @@ int getSupportOfMRETree(Array *bipartitionsById,  Dropset *dropset)
 
   int result = getSupportOfMRETreeHelper(finalArray, dropset);
 
+  if(maxDropsetSize > 1 )
+    freeListFlat(mergingEvents);    
+
   FOR_0_LIMIT(i,emergedBips->length)
     free(GET_PROFILE_ELEM(emergedBips,i));
   free(emergedBips->arrayTable);  free(emergedBips);
-
+  
   return result; 
 }
 
@@ -604,7 +616,7 @@ boolean checkValidityOfEvent(BitVector *obsoleteBips, List *elem)
   if(killP)
     {
       free(me);
-      free(elem);
+      /* free(elem); */
       return FALSE;
     }
   else
@@ -612,6 +624,7 @@ boolean checkValidityOfEvent(BitVector *obsoleteBips, List *elem)
 }
 
 
+#ifdef LATER
 void printDropset(Dropset *dropset)
 {
   IndexList *iter; 
@@ -657,8 +670,10 @@ void printDropset(Dropset *dropset)
       PR("\n");
     }
 }
+#endif
 
 
+#ifdef LATER
 void printMergingHash(HashTable *mergingHash)
 {
   if(mergingHash->entryCount < 1)
@@ -675,6 +690,7 @@ void printMergingHash(HashTable *mergingHash)
       printDropset(dropset);
     }
 }
+#endif
 
 
 #ifdef MYDEBUG
@@ -740,13 +756,13 @@ void cleanup_mergingEvents(HashTable *mergingHash, BitVector *mergingBipartition
     return;
 
   FOR_HASH(htIter, mergingHash)
-  {
-    Dropset
-      *dropset = getCurrentValueFromHashTableIterator(htIter);
+    {
+      Dropset
+	*dropset = getCurrentValueFromHashTableIterator(htIter);
     
-    /* combined events */
-    List *iter = dropset->combinedEvents;
-    FOR_LIST(iter)
+      /* always remove combined events */
+      List *iter = dropset->complexEvents;
+      FOR_LIST(iter)
       {
 	MergingEvent *me = iter->value; 
 	assert(me);
@@ -756,10 +772,14 @@ void cleanup_mergingEvents(HashTable *mergingHash, BitVector *mergingBipartition
 	    free(me);
 	  }	
       }
-    freeListFlat(dropset->combinedEvents);
-  }
+      freeListFlat(dropset->complexEvents);
+      
+      /* always remove acquired elems */
+      freeListFlat(dropset->acquiredPrimeE);
+    }
   free(htIter);
 
+  /* reduce own elements */
   FOR_HASH_2(htIter, mergingHash)
     {
       Dropset
@@ -769,16 +789,17 @@ void cleanup_mergingEvents(HashTable *mergingHash, BitVector *mergingBipartition
 
       /* prime events */
       List 
-	*iter = dropset->primeEvents, 
+	*iter = dropset->ownPrimeE, 
 	*start = NULL; 
       while(iter)
 	{
 	  List *next = iter->next;
 	  if( checkValidityOfEvent(mergingBipartitions, iter) ) 
-	    start = appendToList(iter->value, start); 
+	    APPEND(iter->value, start); 
+	  free(iter);
 	  iter = next; 
 	}
-      dropset->primeEvents = start; 
+      dropset->ownPrimeE = start; 
     }
   free(htIter);  
   
@@ -1043,13 +1064,15 @@ void bitSetterHelper(BitVector *bipartitionsSeen, BitVector *bipConflict, int a)
 void combineEventsForOneDropset(Array *allDropsets, Dropset *refDropset, Array *bipartitionsById)
 {
   List *allEventsUncombined = NULL;
-  refDropset->combinedEvents = NULL;  
+  /* refDropset->combinedEvents = NULL; */
+  refDropset->acquiredPrimeE = NULL; 
+  refDropset->complexEvents = NULL; 
 
   /* gather all events */
   int i; 
   FOR_0_LIMIT(i,allDropsets->length)
     {
-      Dropset *currentDropset = GET_DROPSET_ELEM(allDropsets, i);      
+      Dropset *currentDropset = GET_DROPSET_ELEM(allDropsets, i);
       if(
 #ifdef NEW_SUBSET
 	 isSubsetOfReverseOrdered(currentDropset->taxaToDrop, refDropset->taxaToDrop)
@@ -1059,7 +1082,7 @@ void combineEventsForOneDropset(Array *allDropsets, Dropset *refDropset, Array *
 	 )
 	{
 	  List
-	    *iter = currentDropset->primeEvents; 
+	    *iter = currentDropset->ownPrimeE; 
 	  FOR_LIST(iter)
 	    APPEND(iter->value, allEventsUncombined);
 	}
@@ -1079,7 +1102,7 @@ void combineEventsForOneDropset(Array *allDropsets, Dropset *refDropset, Array *
 
   /* add multi-merger events to dummy */
   iter = allEventsUncombined; 
-  List *allEventsCombined = NULL;
+  /* List *allEventsCombined = NULL; */
   List *complexEvents = NULL; 
   FOR_LIST(iter)
   {
@@ -1087,20 +1110,21 @@ void combineEventsForOneDropset(Array *allDropsets, Dropset *refDropset, Array *
   
     if(NTH_BIT_IS_SET(bipConflict, mEvent->mergingBipartitions.pair[0])
        || NTH_BIT_IS_SET(bipConflict, mEvent->mergingBipartitions.pair[1]))
+      /* TODO is complexEvents really necessary */
       complexEvents = addEventToDropsetCombining(complexEvents, mEvent->mergingBipartitions); 
-    else
-      APPEND(mEvent, allEventsCombined);
+    else      
+      APPEND(mEvent, refDropset->acquiredPrimeE);
   }
   freeListFlat(allEventsUncombined);
 
-  iter = complexEvents; 
+  iter = complexEvents;
   FOR_LIST(iter)
-    APPEND(iter->value, allEventsCombined);
+    APPEND(iter->value, refDropset->complexEvents);
 
   freeListFlat(complexEvents);
   free(bipConflict);
   free(bipartitionsSeen);
-  refDropset->combinedEvents = allEventsCombined; 
+  /* refDropset->combinedEvents = allEventsCombined; */
 }
 
 
@@ -1288,14 +1312,29 @@ void getSupportGainedThreshold(MergingEvent *me, Array *bipartitionsById)
 void evaluateDropset(HashTable *mergingHash, Dropset *dropset,Array *bipartitionsById, List *consensusBipsCanVanish )
 {
   int result = 0; 
-  List 
-    *iter = (maxDropsetSize == 1) ? dropset->primeEvents : dropset->combinedEvents;
+  List
+    *allElems = NULL, 
+    *elemsToCheck = NULL;
+  
+  if(maxDropsetSize == 1)
+    elemsToCheck = dropset->ownPrimeE ;
+  else
+    {
+      List *otherIter = dropset->acquiredPrimeE; 
+      FOR_LIST(otherIter)
+	APPEND(otherIter->value, elemsToCheck);
+      otherIter = dropset->complexEvents;
+      FOR_LIST(otherIter)
+	APPEND(otherIter->value, elemsToCheck);
+      allElems = elemsToCheck; 
+    }
+
   BitVector
     *bipsSeen = CALLOC(GET_BITVECTOR_LENGTH(bipartitionsById->length), sizeof(BitVector));
 
-  FOR_LIST(iter)    
+  FOR_LIST(elemsToCheck)    
   {
-    MergingEvent *me = (MergingEvent*)iter->value;
+    MergingEvent *me = (MergingEvent*)elemsToCheck->value;
     
     if(NOT me->computed)
       {
@@ -1334,10 +1373,12 @@ void evaluateDropset(HashTable *mergingHash, Dropset *dropset,Array *bipartition
 	FLIP_NTH_BIT(bipsSeen,me->mergingBipartitions.pair[0]);
 	FLIP_NTH_BIT(bipsSeen,me->mergingBipartitions.pair[1]);
       }
-  } 
+  }
+  freeListFlat(allElems);
+  
   
   /* handle vanishing bip */
-  iter = consensusBipsCanVanish; 
+  List *iter = consensusBipsCanVanish; 
   FOR_LIST(iter)
   {
     ProfileElem *elem = iter->value;
@@ -1569,15 +1610,27 @@ BitVector *cleanup_applyAllMergerEvents(Array *bipartitionsById, Dropset *bestDr
 #ifdef PRINT_VERY_VERBOSE
       printDropset(bestDropset);
 #endif
-
-      List 
-	*iter  = maxDropsetSize == 1  ? bestDropset->primeEvents :   bestDropset->combinedEvents;
-
+      
+      List *iter = NULL ; 
+      if(maxDropsetSize == 1)
+	iter = bestDropset->ownPrimeE;
+      else 
+	iter = bestDropset->acquiredPrimeE; 
       FOR_LIST(iter)
       {
 	int newBipId = cleanup_applyOneMergerEvent((MergingEvent*)iter->value, bipartitionsById, mergingBipartitions);
 	FLIP_NTH_BIT(candidateBips, newBipId);
       }
+
+      if(maxDropsetSize > 1 )
+	{
+	  iter = bestDropset->complexEvents;
+	  FOR_LIST(iter)
+	  {
+	    int newBipId = cleanup_applyOneMergerEvent((MergingEvent*)iter->value, bipartitionsById, mergingBipartitions);
+	    FLIP_NTH_BIT(candidateBips, newBipId);
+	  }
+	}
     } 
   
   return candidateBips;
@@ -1611,7 +1664,7 @@ void cleanup_rehashDropsets(HashTable *mergingHash, Dropset *bestDropset)
     if( NOT dropset)
       break;
 
-    if(NOT dropset->primeEvents || 
+    if(NOT dropset->ownPrimeE || 
 #ifdef NEW_SUBSET       
        isSubsetOfReverseOrdered(dropset->taxaToDrop, taxaToDrop) 
 #else
@@ -1643,14 +1696,14 @@ void cleanup_rehashDropsets(HashTable *mergingHash, Dropset *bestDropset)
 	  {
 	    List
 	      *iter, *next; 
-	    for(iter = dropset->primeEvents; iter; iter = next)
+	    for(iter = dropset->ownPrimeE; iter; iter = next)
 	      {
 		next = iter->next; 
-		iter->next = found->primeEvents;
-		found->primeEvents = iter;
+		iter->next = found->ownPrimeE;
+		found->ownPrimeE = iter;
 	      }
 	    freeIndexList(dropset->taxaToDrop);
-	    freeListFlat(dropset->primeEvents);
+	    freeListFlat(dropset->ownPrimeE);
 	    free(dropset);
 	  } 	
       }
@@ -1684,7 +1737,17 @@ BitVector *cleanup(All *tr, HashTable *mergingHash, Dropset *bestDropset, BitVec
   cleanup_updateNumBitsAndCleanArrays(bipartitionProfile, bipartitionsById, bipsToVanish,candidateBips,bestDropset );
   removeElementFromHash(mergingHash, bestDropset);
   cleanup_mergingEvents(mergingHash, bipsToVanish, candidateBips, bipartitionProfile->length);
-  freeListFlat(bestDropset->combinedEvents);
+  /* freeListFlat(bestDropset->acquiredPrimeE); */
+  /* freeListFlat(bestDropset->complexEvents);  */
+  /* List *iter = bestDropset->ownPrimeE; */
+  /* while(iter) */
+  /*   { */
+  /*     List *next = iter->next;  */
+  /*     free((MergingEvent*)iter->value); */
+  /*     iter = next;  */
+  /*   }   */
+
+  /* TODO free own elements */
   cleanup_rehashDropsets(mergingHash, bestDropset);
   
 #ifdef PRINT_VERY_VERBOSE
@@ -1902,6 +1965,8 @@ void doomRogues(All *tr, char *bootStrapFileName, char *dontDropFile, char *tree
       PR("[%f] computed / updated events\n", updateTime(&timeInc));
 #endif
 
+      /* clear */
+
       /******************/
       /* combine events */
       /******************/
@@ -1995,10 +2060,10 @@ void doomRogues(All *tr, char *bootStrapFileName, char *dontDropFile, char *tree
 
   fclose(rogueOutput);
   for(i= 0 ; i < dropRound + 1; ++i)
-    {      
+    {
       Dropset *theDropset = dropsetPerRound[i];
       if(theDropset)
-	freeDropsetDeep(theDropset, FALSE);
+	freeDropsetDeepInEnd(theDropset);
     }
   free(dropsetPerRound);
   free(neglectThose);

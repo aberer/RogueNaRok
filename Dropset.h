@@ -26,11 +26,13 @@ typedef struct dropset
 {
   IndexList *taxaToDrop;
   int improvement;
-  List *primeEvents;
-  List *combinedEvents;  
-/* #ifdef PARALLEL */
-/*   pthread_mutex_t *lock;  */
-/* #endif */
+  
+  List *ownPrimeE; 
+  List *acquiredPrimeE; 
+  List *complexEvents; 
+
+  /* List *primeEvents; */
+  /* List *combinedEvents; */
 } Dropset;
 
 
@@ -42,6 +44,7 @@ void removeDropsetAndRelated(HashTable *mergingHash, Dropset *dropset);
 void addEventToDropsetPrime(Dropset *dropset, int a, int b);
 List *addEventToDropsetCombining(List *complexEvents, MergingBipartitions primeEvent);
 void freeDropsetDeepInHash(void *value);
+void freeDropsetDeepInEnd(void *value);
 void addEventToDropsetForCombining(Dropset *dropset, IndexList *mergingBips);
 void initializeRandForTaxa(int mxtips);
 void freeDropsetDeep(void *values, boolean freeCombinedM);

@@ -18,12 +18,13 @@ void initializeRandForTaxa(int mxtips)
 }
 
 
+/* is ONLY done for adding OWN elements */
 void addEventToDropsetPrime(Dropset *dropset, int a, int b)
 {
   List
     *lIter; 
 
-  lIter = dropset->primeEvents;
+  lIter = dropset->ownPrimeE;
   while(lIter)
     {
       List *next = lIter->next; 
@@ -51,7 +52,7 @@ void addEventToDropsetPrime(Dropset *dropset, int a, int b)
   result->mergingBipartitions.pair[0] = b; 
   result->mergingBipartitions.pair[1] = a; 
   
-  APPEND(result, dropset->primeEvents);
+  APPEND(result, dropset->ownPrimeE);
 }
 
 
@@ -140,39 +141,74 @@ void freeDropsetDeepInHash(void *value)
 }
 
 
-void freeDropsetDeep(void *value, boolean freeCombinedM)
+void freeDropsetDeep(void *value, boolean extended)
 {
-  Dropset *dropset = (Dropset*) value;
+  Dropset
+    *dropset = (Dropset*) value;
+  List
+    *iter = NULL; 
+
   if(dropset->taxaToDrop)
     freeIndexList(dropset->taxaToDrop);
   
   /* free combined events */
-  if(freeCombinedM)
+  if(extended && dropset->complexEvents)
     {
-      List *iter = dropset->combinedEvents;
+      iter = dropset->complexEvents;
       while(iter)
 	{
 	  List *next = iter->next;
 	  MergingEvent *me = iter->value;
-	  if(me->isComplex)
-	    {
-	      freeIndexList(me->mergingBipartitions.many);
-	      free(me);
-	    }
+	  freeIndexList(me->mergingBipartitions.many);
+	  free(me);
 	  iter = next;
 	}
-      freeListFlat(dropset->combinedEvents);
+      freeListFlat(dropset->complexEvents);
     }
+  
+  if(extended && dropset->acquiredPrimeE)
+    freeListFlat(dropset->acquiredPrimeE);
 
-  /* free prime events */
-  List *iter = dropset->primeEvents;
+  /* ownPrimeE */
+  iter = dropset->ownPrimeE;
   while(iter)
     {
       List *next = iter->next; 
-      free((MergingEvent*)iter->value);
+      free((MergingEvent*)iter->value);  
       iter = next;
     }
-  freeListFlat(dropset->primeEvents);
+  freeListFlat(dropset->ownPrimeE);
+
+  free(dropset);
+}
+
+
+void freeDropsetDeepInEnd(void *value)
+{
+  Dropset
+    *dropset = (Dropset*) value;
+  List
+    *iter = NULL; 
+
+  if(dropset->taxaToDrop)
+    freeIndexList(dropset->taxaToDrop);
+  
+  /* free combined events */
+  if(dropset->complexEvents)
+    freeListFlat(dropset->complexEvents);
+  
+  if( dropset->acquiredPrimeE) 
+    freeListFlat(dropset->acquiredPrimeE);
+
+  /* ownPrimeE */
+  iter = dropset->ownPrimeE;
+  while(iter)
+    {
+      List *next = iter->next; 
+      free((MergingEvent*)iter->value);  
+      iter = next;
+    }
+  freeListFlat(dropset->ownPrimeE);
 
   free(dropset);
 }
