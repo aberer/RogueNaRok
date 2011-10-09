@@ -1,0 +1,14 @@
+RogueNaRok is an algorithm for the identification of rogue taxa in a tree set.
+
+How do I install it?
+
+Download the code and run the "make" command.
+
+For a parallel version of the RogueNaRok algorithm, use "make
+mode=parallel". Note that, the parallel version requires the
+pthreads-library. Running one of the programs without arguments will
+trigger the help message. Just follow the instructions.
+
+More info is available on
+https://github.com/aberer/RogueNaRok/wiki/RogueNaRok . Also, use this
+site for reporting bugs, ask questions of how to employ RogueNaRok.
