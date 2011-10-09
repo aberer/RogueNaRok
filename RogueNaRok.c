@@ -1698,12 +1698,12 @@ void cleanup_rehashDropsets(HashTable *mergingHash, Dropset *bestDropset)
 	      *iter, *next; 
 	    for(iter = dropset->ownPrimeE; iter; iter = next)
 	      {
+		/* TODO potential error: double check, if this stuff did not already occur would be great */
 		next = iter->next; 
 		iter->next = found->ownPrimeE;
 		found->ownPrimeE = iter;
 	      }
 	    freeIndexList(dropset->taxaToDrop);
-	    freeListFlat(dropset->ownPrimeE);
 	    free(dropset);
 	  } 	
       }
