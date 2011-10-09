@@ -1088,29 +1088,20 @@ void combineEventsForOneDropset(Array *allDropsets, Dropset *refDropset, Array *
 
   /* add multi-merger events to dummy */
   iter = allEventsUncombined; 
-  /* List *allEventsCombined = NULL; */
-  List *complexEvents = NULL; 
   FOR_LIST(iter)
   {
     MergingEvent *mEvent = (MergingEvent*)iter->value;
   
     if(NTH_BIT_IS_SET(bipConflict, mEvent->mergingBipartitions.pair[0])
        || NTH_BIT_IS_SET(bipConflict, mEvent->mergingBipartitions.pair[1]))
-      /* TODO is complexEvents really necessary */
-      complexEvents = addEventToDropsetCombining(complexEvents, mEvent->mergingBipartitions); 
+      refDropset->complexEvents = addEventToDropsetCombining(refDropset->complexEvents, mEvent->mergingBipartitions); 
     else      
       APPEND(mEvent, refDropset->acquiredPrimeE);
   }
   freeListFlat(allEventsUncombined);
 
-  iter = complexEvents;
-  FOR_LIST(iter)
-    APPEND(iter->value, refDropset->complexEvents);
-
-  freeListFlat(complexEvents);
   free(bipConflict);
   free(bipartitionsSeen);
-  /* refDropset->combinedEvents = allEventsCombined; */
 }
 
 
@@ -1723,17 +1714,7 @@ BitVector *cleanup(All *tr, HashTable *mergingHash, Dropset *bestDropset, BitVec
   cleanup_updateNumBitsAndCleanArrays(bipartitionProfile, bipartitionsById, bipsToVanish,candidateBips,bestDropset );
   removeElementFromHash(mergingHash, bestDropset);
   cleanup_mergingEvents(mergingHash, bipsToVanish, candidateBips, bipartitionProfile->length);
-  /* freeListFlat(bestDropset->acquiredPrimeE); */
-  /* freeListFlat(bestDropset->complexEvents);  */
-  /* List *iter = bestDropset->ownPrimeE; */
-  /* while(iter) */
-  /*   { */
-  /*     List *next = iter->next;  */
-  /*     free((MergingEvent*)iter->value); */
-  /*     iter = next;  */
-  /*   }   */
 
-  /* TODO free own elements */
   cleanup_rehashDropsets(mergingHash, bestDropset);
   
 #ifdef PRINT_VERY_VERBOSE
@@ -1765,11 +1746,6 @@ BitVector *cleanup(All *tr, HashTable *mergingHash, Dropset *bestDropset, BitVec
   cumScores[dropRound+1] = cumScore;
 
   printDropsetImprovement(bestDropset, tr, cumScore);
-
-/* #ifdef PRINT_VERY_VERBOSE */
-  /* PR("STRUCT AFTER CLEAN UP\n"); */
-  /* printMergingHash(mergingHash); */
-/* #endif */
 
   return candidateBips; 
 }
