@@ -33,7 +33,7 @@ typedef struct profile_elem
 #define GET_PROFILE_ELEM(array,index) (((ProfileElem**)array->arrayTable)[(index)])
 #define GET_DROPSET_ELEM(array,index) (((Dropset**)array->arrayTable)[(index)])
 
-int *createNumBitIndex(Array *bipartitionProfile, int mxtips, boolean useInsertionSort);
+int *createNumBitIndex(Array *bipartitionProfile, int mxtips);
 int sortById(const void *a, const void *b);
 int sortBySupport(const void *a, const void *b);
 int sortBipProfile(const void *a, const void *b);

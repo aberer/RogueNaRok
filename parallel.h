@@ -8,8 +8,6 @@ extern volatile int numberOfJobs;
 extern volatile int jobCycle;
 extern volatile int threadJob;
 extern volatile char *barrierBuffer;
-
-/* TODO shouldn't it be volative too? */
 extern  pthread_mutex_t mutex;
 
 #define THREAD_GET_EVENTS 1 

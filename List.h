@@ -27,6 +27,7 @@ void freeIndexList(IndexList *list);
 IndexList* appendToIndexList(int value, IndexList *list) ;
 boolean indexListEqual(IndexList *aList, IndexList *bList);
 boolean isInIndexList(int index, IndexList *list);
+int isInIndexListSpecial(int a, int b, IndexList *list);
 void freeIndexList(IndexList *list);
 IndexList* appendToIndexList(int value, IndexList *list) ;
 void freeIndexList(IndexList *list);

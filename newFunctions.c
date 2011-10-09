@@ -91,7 +91,6 @@ Array *getOriginalBipArray(All *tr, FILE *bestTree, FILE *treeFile)
   for(i = tr->mxtips; i < MASK_LENGTH * vectorLength; ++i)
     lastByte |= mask32[i % MASK_LENGTH];
 
-  /* TODO: free this structure!  */
   unsigned int 
     *randForTaxa = CALLOC(tr->mxtips, sizeof(unsigned int));
   

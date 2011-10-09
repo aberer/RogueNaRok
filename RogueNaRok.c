@@ -524,7 +524,6 @@ int getSupportOfMRETree(Array *bipartitionsById,  Dropset *dropset)
 }
 
 
-/* TODO-opt */
 boolean bipartitionVanishesP(ProfileElem *elem, Dropset *dropset)
 {
   IndexList *iter = dropset->taxaToDrop;
@@ -1890,7 +1889,7 @@ void doomRogues(All *tr, char *bootStrapFileName, char *dontDropFile, char *tree
       /***********/
       bestDropset = NULL;
       unifyBipartitionRepresentation(bipartitionProfile,droppedTaxa); 
-      indexByNumberBits = createNumBitIndex(bipartitionProfile, mxtips, FALSE);
+      indexByNumberBits = createNumBitIndex(bipartitionProfile, mxtips);
 
 #ifdef PRINT_TIME
       PR("[%f] sorting bipartition profile\n", updateTime(&timeInc));

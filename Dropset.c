@@ -58,7 +58,6 @@ void addEventToDropsetPrime(Dropset *dropset, int a, int b)
 
 List *addEventToDropsetCombining(List *complexEvents, MergingBipartitions primeEvent)
 {
-  List *iter = complexEvents;
   int 
     a = primeEvent.pair[0],
     b = primeEvent.pair[1];
@@ -68,21 +67,23 @@ List *addEventToDropsetCombining(List *complexEvents, MergingBipartitions primeE
     *secondElem = NULL; 
   
   /* find list elems that already contain merging events  */
+  List *iter ; 
+  
+  iter = complexEvents; 
   FOR_LIST(iter)
   {
-    MergingEvent *me = iter->value;
-    if(isInIndexList(a, me->mergingBipartitions.many) 
-       || isInIndexList(b, me->mergingBipartitions.many) )
+    int res = isInIndexListSpecial(a,b,((MergingEvent*)iter->value)->mergingBipartitions.many);
+    if(res)
       {
 	if(NOT firstElem)
-	  firstElem = iter;
+	  firstElem = iter; 
 	else if(NOT secondElem)
 	  secondElem = iter; 
-	else
-	  assert(0);
+	else break; 
       }
   }
-  
+
+
   if(firstElem && secondElem)
     {
       /* merge bips into first elem */ 

@@ -1,8 +1,7 @@
 CC = gcc 
 
-CFLAGS =  -D_GNU_SOURCE -Wall   -DNEW_SUBSET  #  -DNDEBUG #
+CFLAGS =  -D_GNU_SOURCE -Wall -DNDEBUG #    -DNEW_SUBSET  #   #
 LFLAGS =   -lm
-# 
 
 #  -funroll-loops 
 ifeq ($(mode), debug)

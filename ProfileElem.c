@@ -112,84 +112,13 @@ int sortBySupport(const void *a, const void *b)
 }
 
 
-/* TODO does not work yet =/  */
-#define TRY
-void insertionSort(Array *array)
-{
-  int
-    i,j; 
-
-#ifndef TRY
-  Array *newArray = CALLOC(1,sizeof(Array));  
-  newArray->arrayTable = CALLOC(array->length, sizeof(ProfileElem*));
-  newArray->length = array->length; 
-  
-  j = 0; 
-  FOR_0_LIMIT(i,array->length)
-    {
-      ProfileElem *elem = GET_PROFILE_ELEM(array,i); 
-      if(elem)
-	{
-	  GET_PROFILE_ELEM(newArray,j) = elem;
-	  j++;
-	}
-    }
-  while(j < array->length)
-    {
-      GET_PROFILE_ELEM(newArray,j) = NULL;
-      j++;
-    }
-#endif
-
-#ifdef TRY
-  Array *newArray = array; 
-#endif
-
-
-  FOR_0_LIMIT(i,array->length)
-    {
-
-      if( NOT GET_PROFILE_ELEM(newArray,i))
-#ifndef TRY
-	break; 
-#else
-      continue; 
-#endif
-
-      for (j = i;  j > 0  ; j-- ) 
-	{	  
-	  
-	  if(NOT GET_PROFILE_ELEM(newArray,j) 
-	     || GET_PROFILE_ELEM(newArray,j)->numberOfBitsSet < GET_PROFILE_ELEM(newArray,j)->numberOfBitsSet)
-	    {
-	      ProfileElem *tmp = GET_PROFILE_ELEM(newArray,j);
-	      GET_PROFILE_ELEM(newArray, (j-1)) = GET_PROFILE_ELEM(newArray,j);
-	      GET_PROFILE_ELEM(newArray,j) = tmp; 
-	    }
-	}
-    }
-
-#ifndef TRY
-  free(array->arrayTable);  
-  array->arrayTable = newArray->arrayTable;
-  free(newArray);
-#endif
-}
-
 /* what is the index in the (ordered) profile of the first element to
    have at least i bits set?  */
-int *createNumBitIndex(Array *bipartitionProfile, int mxtips, boolean useInsertionSort)
+int *createNumBitIndex(Array *bipartitionProfile, int mxtips)
 {
   int *result  = CALLOC(mxtips, sizeof(int));   
   memset(result, -1, mxtips * sizeof(int));
-
-  if(useInsertionSort)
-    {
-      PR("really using insertion sort.\n");
-      insertionSort(bipartitionProfile);
-    }
-  else
-    qsort(bipartitionProfile->arrayTable, bipartitionProfile->length, sizeof(ProfileElem**), sortBipProfile); 
+  qsort(bipartitionProfile->arrayTable, bipartitionProfile->length, sizeof(ProfileElem**), sortBipProfile); 
   
   int
     i,    

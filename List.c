@@ -13,6 +13,20 @@ boolean isInIndexList(int index, IndexList *list)
 }
 
 
+int isInIndexListSpecial(int a, int b, IndexList *list)
+{
+  FOR_LIST(list)
+  {
+    if(list->index == a)
+      return 1 ; 
+    if(list->index == b)
+      return 2; 
+  }
+
+  return 0; 
+}
+
+
 
 IndexList *setMinusOf(IndexList *list, IndexList *subtract)
 {
@@ -40,7 +54,6 @@ IndexList *setMinusOf(IndexList *list, IndexList *subtract)
 }
 
 
-/* TODO-opt */
 #ifdef NEW_SUBSET
 boolean isSubsetOfReverseOrdered(IndexList *subset, IndexList *set)
 {
@@ -84,12 +97,6 @@ boolean isSubsetOf(IndexList *subset, IndexList *set)
 #endif
 
 
-
-
-
-
-
-/* TODO-opt?  */
 IndexList *appendToIndexListIfNotThere(int elem, IndexList *list)
 {
   IndexList *iter = list;
