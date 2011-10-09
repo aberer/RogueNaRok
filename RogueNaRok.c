@@ -26,13 +26,6 @@
 #define PRINT_DROPSETS
 #define PRINT_TIME
 
-/* TODO 
-   • are RBICs correct with exclude?
-   • must comlement merging be corrected on exclude ? 
-   • basically mxtips is completely messed up then  
-
-   • complex merger events are never free'd
-*/
 
 /* try to produce minimal dropsets */
 #define MIN_DROPSETS
@@ -74,13 +67,6 @@ double labelPenalty = 0.,
 
 /* lazy */
 void getSupportGainedThreshold(MergingEvent *me, Array *bipartitionsById);
-
-/* TODO: 
-   still potential bugs: 
-   • unflip bits in bipartitionpresent bitvector
-   • turn bipartitionpresent into a bloom filter?  ( / use it to improve speed ) 
-*/
-
 
 #ifdef MYDEBUG
 void debug_dropsetConsistencyCheck(HashTable *mergingHash)
