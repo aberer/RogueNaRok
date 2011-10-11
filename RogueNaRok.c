@@ -253,7 +253,7 @@ Dropset *insertOrFindDropset(HashTable *hashtable, Dropset *dropset, unsigned in
     }
   else
     {
-      insertIntoHashTable(hashtable, dropset, hashValue);
+      insertIntoHashTable(hashtable, dropset, hashValue);      
       return dropset;
     }
 }
@@ -268,7 +268,7 @@ boolean checkForMergerAndAddEvent(boolean complement, ProfileElem *elemA, Profil
       Dropset
 	*dropset,
 	*tmp = CALLOC(1,sizeof(Dropset));
-      tmp->taxaToDrop = dropsetTaxa;
+      tmp->taxaToDrop = dropsetTaxa;      
       
       unsigned int hashValue = 0; 
       IndexList *iter =  dropsetTaxa; 
@@ -1048,22 +1048,24 @@ void bitSetterHelper(BitVector *bipartitionsSeen, BitVector *bipConflict, int a)
 void combineEventsForOneDropset(Array *allDropsets, Dropset *refDropset, Array *bipartitionsById)
 {
   List *allEventsUncombined = NULL;
-  /* refDropset->combinedEvents = NULL; */
   refDropset->acquiredPrimeE = NULL; 
   refDropset->complexEvents = NULL; 
+
+  /* if(NOT refDropset->taxaToDrop->next) */
+  /*   { */
+  /*     List *iter =  refDropset->ownPrimeE;  */
+  /*     FOR_LIST(iter) */
+  /*     { */
+	
+  /*     } */
+  /*   } */
 
   /* gather all events */
   int i; 
   FOR_0_LIMIT(i,allDropsets->length)
-    {
+    {      
       Dropset *currentDropset = GET_DROPSET_ELEM(allDropsets, i);
-      if(
-#ifdef NEW_SUBSET
-	 isSubsetOfReverseOrdered(currentDropset->taxaToDrop, refDropset->taxaToDrop)
-#else	 
-	 isSubsetOf(currentDropset->taxaToDrop, refDropset->taxaToDrop)
-#endif
-	 )
+      if( isSubsetOf(currentDropset->taxaToDrop, refDropset->taxaToDrop) )
 	{
 	  List
 	    *iter = currentDropset->ownPrimeE; 
@@ -1085,11 +1087,9 @@ void combineEventsForOneDropset(Array *allDropsets, Dropset *refDropset, Array *
   }
 
   /* add multi-merger events to dummy */
-#define NEW
-#ifdef NEW 
   List *complexEvents = NULL; 
   int highest = 0; 
-#endif
+
   iter = allEventsUncombined; 
   FOR_LIST(iter)
   {
@@ -1099,24 +1099,18 @@ void combineEventsForOneDropset(Array *allDropsets, Dropset *refDropset, Array *
     if(NTH_BIT_IS_SET(bipConflict, a)
        || NTH_BIT_IS_SET(bipConflict, b))
       {
-#ifdef NEW
 	APPEND(mEvent, complexEvents);
 	if(a > highest)
 	  highest =a; 
 	if(b > highest)
 	  highest = b; 
-#else
-	refDropset->complexEvents = addEventToDropsetCombining(refDropset->complexEvents, mEvent->mergingBipartitions); 
-#endif
       }
     else      
       APPEND(mEvent, refDropset->acquiredPrimeE);
   }
   
-#ifdef NEW
   refDropset->complexEvents = findIndependentComponents(complexEvents, highest);
   freeListFlat(complexEvents);
-#endif
 
   freeListFlat(allEventsUncombined);  
   free(bipConflict);
@@ -1155,10 +1149,8 @@ IndexList *findAnIndependentComponent(Node **allNodes, Node *thisNode)
 List *findIndependentComponents(List *singleVertices, int highest)
 {
   List *independentComponents = NULL; 
-
-  /* PR("\n> %d\n\n", highest); */
   
-  Node **nodes = CALLOC((highest+1), sizeof(Node*)); 
+  Node **nodes = CALLOC((highest+1), sizeof(Node*));
   List *listOfNodes = NULL; 
 
   /* transform the edges into nodes */
@@ -1757,13 +1749,7 @@ void cleanup_rehashDropsets(HashTable *mergingHash, Dropset *bestDropset)
     if( NOT dropset)
       break;
 
-    if(NOT dropset->ownPrimeE || 
-#ifdef NEW_SUBSET       
-       isSubsetOfReverseOrdered(dropset->taxaToDrop, taxaToDrop) 
-#else
-       isSubsetOf(dropset->taxaToDrop, taxaToDrop) 
-#endif
-       )
+    if(NOT dropset->ownPrimeE || isSubsetOf(dropset->taxaToDrop, taxaToDrop) )
       {
 	removeElementFromHash(mergingHash, dropset);
 	freeDropsetDeep(dropset, FALSE);

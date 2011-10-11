@@ -30,9 +30,6 @@ typedef struct dropset
   List *ownPrimeE; 
   List *acquiredPrimeE; 
   List *complexEvents; 
-
-  /* List *primeEvents; */
-  /* List *combinedEvents; */
 } Dropset;
 
 
