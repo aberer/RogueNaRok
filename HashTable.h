@@ -43,6 +43,7 @@ HashTable *createHashTable(unsigned int size, void *commonAttr, unsigned int (*h
 HashTableIterator *createHashTableIterator(HashTable *hashTable); 
 void *getCurrentValueFromHashTableIterator(HashTableIterator *hashTableIterator);
 boolean hashTableIteratorNext(HashTableIterator *hashTableIterator);
+void *searchHashTableWithInt(HashTable *hashtable, unsigned int hashValue);
 void *searchHashTable(HashTable *hashtable, void *value, unsigned int hashValue);
 void insertIntoHashTable(HashTable *hashTable, void *value, unsigned int index);
 boolean removeElementFromHash(HashTable *hashtable, void *value);

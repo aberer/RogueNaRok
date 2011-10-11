@@ -102,6 +102,24 @@ boolean removeElementFromHash(HashTable *hashtable, void *value)
 }
 
 
+void *searchHashTableWithInt(HashTable *hashtable, unsigned int hashValue)
+{
+  unsigned int 
+    position = hashValue % hashtable->tableSize;
+  
+  HashElem 
+    *elem;
+  
+  for(elem = hashtable->table[position]; 
+      elem; 
+      elem = elem->next)
+    if(elem->fullKey  == hashValue)
+      return  elem->value; 
+
+  return NULL;
+}
+
+
 void *searchHashTable(HashTable *hashtable, void *value, unsigned int hashValue)
 {
   unsigned int 

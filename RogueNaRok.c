@@ -1087,7 +1087,7 @@ void combineEventsForOneDropset(Array *allDropsets, Dropset *refDropset, Array *
   }
 
   /* add multi-merger events to dummy */
-  List *complexEvents = NULL; 
+  List *complexEvents = NULL;   
   int highest = 0; 
 
   iter = allEventsUncombined; 
@@ -1100,17 +1100,17 @@ void combineEventsForOneDropset(Array *allDropsets, Dropset *refDropset, Array *
        || NTH_BIT_IS_SET(bipConflict, b))
       {
 	APPEND(mEvent, complexEvents);
-	if(a > highest)
-	  highest =a; 
-	if(b > highest)
-	  highest = b; 
+	highest++; 	
       }
     else      
       APPEND(mEvent, refDropset->acquiredPrimeE);
   }
   
-  refDropset->complexEvents = findIndependentComponents(complexEvents, highest);
-  freeListFlat(complexEvents);
+  if(highest)
+    {
+      refDropset->complexEvents = findIndependentComponents(complexEvents, highest);
+      freeListFlat(complexEvents);
+    } 
 
   freeListFlat(allEventsUncombined);  
   free(bipConflict);
@@ -1126,7 +1126,20 @@ typedef struct _node
 } Node; 
 
 
-IndexList *findAnIndependentComponent(Node **allNodes, Node *thisNode)
+
+boolean nodeEqual(HashTable *hashTable, void *entryA, void *entryB)
+{
+  return ((Node*)entryA)->id  == ((Node*)entryB)->id;  
+}
+
+
+unsigned int nodeHashValue(HashTable *hashTable, void *value)
+{
+  return ((Node*)value)->id; 
+}
+
+
+IndexList *findAnIndependentComponent(HashTable *allNodes, Node *thisNode)
 {
   IndexList *iter  = thisNode->edges;   
   thisNode->visited = TRUE;
@@ -1135,9 +1148,10 @@ IndexList *findAnIndependentComponent(Node **allNodes, Node *thisNode)
 
   FOR_LIST(iter)
   {
-    if( NOT allNodes[iter->index]->visited)
+    Node *found = searchHashTableWithInt(allNodes, iter->index);
+    if(  NOT found->visited)
       {
-	IndexList *list = findAnIndependentComponent(allNodes, allNodes[iter->index]);
+	IndexList *list = findAnIndependentComponent(allNodes, found);
 	result = concatenateIndexList(list, result);
       }
   }
@@ -1145,70 +1159,67 @@ IndexList *findAnIndependentComponent(Node **allNodes, Node *thisNode)
   return result; 
 }
 
+void freeNode(void *value)
+{
+  Node *node = value; 
+  freeIndexList(node->edges);
+  free(node);
+}
+
 
 List *findIndependentComponents(List *singleVertices, int highest)
 {
   List *independentComponents = NULL; 
+  HashTable *allNodes = createHashTable(highest * 10, NULL, nodeHashValue, nodeEqual);
+  Node *found;
   
-  Node **nodes = CALLOC((highest+1), sizeof(Node*));
-  List *listOfNodes = NULL; 
-
   /* transform the edges into nodes */
   List *iter = singleVertices; 
   FOR_LIST(iter)
   {
     int a = ((MergingEvent*)iter->value)->mergingBipartitions.pair[0]; 
     int b = ((MergingEvent*)iter->value)->mergingBipartitions.pair[1]; 
-    
-    if( NOT nodes[a])
+
+    if( ( found = searchHashTableWithInt(allNodes, a) ) )
+      APPEND_INT(b,found->edges); 
+    else
       {
 	Node *node = CALLOC(1,sizeof(Node));
 	node->id = a; 
 	APPEND_INT(b,node->edges);
-	APPEND(node, listOfNodes);
-	nodes[a] = node; 
+	insertIntoHashTable(allNodes, node, a);
       }
-    else      
-      APPEND_INT(b,nodes[a]->edges); 
 
-    if( NOT nodes[b])
+    if( ( found = searchHashTableWithInt(allNodes, b) ) )
+      APPEND_INT(a,found->edges); 
+    else
       {
 	Node *node = CALLOC(1,sizeof(Node));
 	node->id = b; 
 	APPEND_INT(a,node->edges);
-	APPEND(node, listOfNodes);
-	nodes[b] = node; 
-      } 
-    else
-      APPEND_INT(a,nodes[b]->edges);
+	insertIntoHashTable(allNodes, node, b);
+      }
   }
 
   /* search connected components */
-  iter = listOfNodes; 
-  FOR_LIST(iter)
-  {
-    Node *node = iter->value; 
-    if(NOT node->visited)
-      {
-	IndexList
-	  *component = findAnIndependentComponent(nodes,node);
-	MergingEvent *me  = CALLOC(1,sizeof(MergingEvent));
-	me->mergingBipartitions.many = component; 
-	me->isComplex = TRUE;
-	APPEND(me,independentComponents);
-      }
-  }
+  HashTableIterator *htIter; 
+  FOR_HASH(htIter, allNodes)
+    {
+      Node *node = getCurrentValueFromHashTableIterator(htIter);      
+      if( NOT node->visited)
+	{
+	  IndexList
+	    *component = findAnIndependentComponent(allNodes,node);
+	  MergingEvent *me  = CALLOC(1,sizeof(MergingEvent));
+	  me->mergingBipartitions.many = component; 
+	  me->isComplex = TRUE;
+	  APPEND(me,independentComponents);
+	}
+    }
+  free(htIter);
   
   /* free the stuff */
-  free(nodes);
-  iter = listOfNodes; 
-  FOR_LIST(iter)
-  {
-    Node *node = iter->value; 
-    freeIndexList(node->edges);
-    free(node);
-  }
-  freeListFlat(listOfNodes);
+  destroyHashTable(allNodes, freeNode);
   return independentComponents; 
 }
 
