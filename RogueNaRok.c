@@ -19,13 +19,11 @@
 #define PROG_VERSION "0.1"
 #define PROG_RELEASE_DATE "not yet"
 
-
 /* #define PRINT_VERY_VERBOSE */
 /* #define MYDEBUG */
 
 #define PRINT_DROPSETS
 #define PRINT_TIME
-
 
 /* try to produce minimal dropsets */
 #define MIN_DROPSETS
@@ -67,6 +65,7 @@ double labelPenalty = 0.,
 
 /* lazy */
 void getSupportGainedThreshold(MergingEvent *me, Array *bipartitionsById);
+List *findIndependentComponents(List *singleVertices, int highest);
 
 #ifdef MYDEBUG
 void debug_dropsetConsistencyCheck(HashTable *mergingHash)
@@ -1086,21 +1085,139 @@ void combineEventsForOneDropset(Array *allDropsets, Dropset *refDropset, Array *
   }
 
   /* add multi-merger events to dummy */
+#define NEW
+#ifdef NEW 
+  List *complexEvents = NULL; 
+  int highest = 0; 
+#endif
   iter = allEventsUncombined; 
   FOR_LIST(iter)
   {
-    MergingEvent *mEvent = (MergingEvent*)iter->value;
-  
-    if(NTH_BIT_IS_SET(bipConflict, mEvent->mergingBipartitions.pair[0])
-       || NTH_BIT_IS_SET(bipConflict, mEvent->mergingBipartitions.pair[1]))
-      refDropset->complexEvents = addEventToDropsetCombining(refDropset->complexEvents, mEvent->mergingBipartitions); 
+    MergingEvent *mEvent = (MergingEvent*)iter->value;  
+    int a = mEvent->mergingBipartitions.pair[0], 
+      b = mEvent->mergingBipartitions.pair[1];
+    if(NTH_BIT_IS_SET(bipConflict, a)
+       || NTH_BIT_IS_SET(bipConflict, b))
+      {
+#ifdef NEW
+	APPEND(mEvent, complexEvents);
+	if(a > highest)
+	  highest =a; 
+	if(b > highest)
+	  highest = b; 
+#else
+	refDropset->complexEvents = addEventToDropsetCombining(refDropset->complexEvents, mEvent->mergingBipartitions); 
+#endif
+      }
     else      
       APPEND(mEvent, refDropset->acquiredPrimeE);
   }
-  freeListFlat(allEventsUncombined);
+  
+#ifdef NEW
+  refDropset->complexEvents = findIndependentComponents(complexEvents, highest);
+  freeListFlat(complexEvents);
+#endif
 
+  freeListFlat(allEventsUncombined);  
   free(bipConflict);
   free(bipartitionsSeen);
+}
+
+
+typedef struct _node
+{
+  int id; 
+  boolean visited; 
+  IndexList *edges;
+} Node; 
+
+
+IndexList *findAnIndependentComponent(Node **allNodes, Node *thisNode)
+{
+  IndexList *iter  = thisNode->edges;   
+  thisNode->visited = TRUE;
+  IndexList *result = NULL; 
+  APPEND_INT(thisNode->id, result);
+
+  FOR_LIST(iter)
+  {
+    if( NOT allNodes[iter->index]->visited)
+      {
+	IndexList *list = findAnIndependentComponent(allNodes, allNodes[iter->index]);
+	result = concatenateIndexList(list, result);
+      }
+  }
+  
+  return result; 
+}
+
+
+List *findIndependentComponents(List *singleVertices, int highest)
+{
+  List *independentComponents = NULL; 
+
+  /* PR("\n> %d\n\n", highest); */
+  
+  Node **nodes = CALLOC((highest+1), sizeof(Node*)); 
+  List *listOfNodes = NULL; 
+
+  /* transform the edges into nodes */
+  List *iter = singleVertices; 
+  FOR_LIST(iter)
+  {
+    int a = ((MergingEvent*)iter->value)->mergingBipartitions.pair[0]; 
+    int b = ((MergingEvent*)iter->value)->mergingBipartitions.pair[1]; 
+    
+    if( NOT nodes[a])
+      {
+	Node *node = CALLOC(1,sizeof(Node));
+	node->id = a; 
+	APPEND_INT(b,node->edges);
+	APPEND(node, listOfNodes);
+	nodes[a] = node; 
+      }
+    else      
+      APPEND_INT(b,nodes[a]->edges); 
+
+    if( NOT nodes[b])
+      {
+	Node *node = CALLOC(1,sizeof(Node));
+	node->id = b; 
+	APPEND_INT(a,node->edges);
+	APPEND(node, listOfNodes);
+	nodes[b] = node; 
+      } 
+    else
+      APPEND_INT(a,nodes[b]->edges);
+  }
+
+  /* search connected components */
+  iter = listOfNodes; 
+  FOR_LIST(iter)
+  {
+    Node *node = iter->value; 
+    if(NOT node->visited)
+      {
+	IndexList
+	  *component = findAnIndependentComponent(nodes,node);
+	MergingEvent *me  = CALLOC(1,sizeof(MergingEvent));
+	me->mergingBipartitions.many = component; 
+	me->isComplex = TRUE;
+	APPEND(me,independentComponents);
+      }
+  }
+  
+  /* free the stuff */
+  free(nodes);
+  iter = listOfNodes; 
+  FOR_LIST(iter)
+  {
+    Node *node = iter->value; 
+    freeIndexList(node->edges);
+    free(node);
+  }
+  freeListFlat(listOfNodes);
+  return independentComponents; 
 }
 
 
@@ -1855,7 +1972,7 @@ void doomRogues(All *tr, char *bootStrapFileName, char *dontDropFile, char *tree
   fprintf(rogueOutput, "num\ttaxNum\ttaxon\trawImprovement\tRBIC\n");
   fprintf(rogueOutput, "%d\tNA\tNA\t%d\t%f\n", 0, 0, (double)cumScore /(numberOfTrees * (mxtips-3)) );
 
-  PR("[%f] initialisation done (initScore = %f)\n", updateTime(&timeInc), (double)cumScore / (double)((tr->mxtips-3) * (computeSupport ? tr->numberOfTrees : 1 ) ));
+  PR("[%f] initialisation done (initScore = %f, numBip=%d)\n", updateTime(&timeInc), (double)cumScore / (double)((tr->mxtips-3) * (computeSupport ? tr->numberOfTrees : 1 ) ), bipartitionsById->length);
 
   boolean firstMerge= TRUE;
   candidateBips = CALLOC(GET_BITVECTOR_LENGTH(bipartitionProfile->length),sizeof(BitVector));
