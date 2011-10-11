@@ -10,6 +10,7 @@
 void findCandidatesForBip(HashTable *mergingHash, ProfileElem *elemA, boolean firstMerge, Array *bipartitionsById, Array *bipartitionProfile, int* indexByNumberBits); 
 void combineEventsForOneDropset(Array *allDropsets, Dropset *refDropset, Array *bipartitionsById);
 int getSupportOfMRETree(Array *bipartitionsById,  Dropset *dropset);
+void evaluateDropset(HashTable *mergingHash, Dropset *dropset,Array *bipartitionsById, List *consensusBipsCanVanish );
 extern int cumScore; 
 
 #ifndef PORTABLE_PTHREADS
@@ -115,6 +116,27 @@ void execFunction(parallelArguments *pArgs, int tid, int n)
 
 	break;
       }
+    case THREAD_EVALUATE_EVENTS:
+      {
+       boolean done = FALSE; 
+       int jobId = globalPArgs->allDropsets->length; 
+       while (NOT done ) 
+         {
+           pthread_mutex_lock(&mutex);
+           jobId = globalPArgs->allDropsets->length - numberOfJobs; 
+           numberOfJobs--; 
+           done = (numberOfJobs <= 0);
+           pthread_mutex_unlock(&mutex);
+
+           if(globalPArgs->allDropsets->length > jobId)
+             {         
+               Dropset *dropset =  GET_DROPSET_ELEM(globalPArgs->allDropsets, jobId);    
+               evaluateDropset(globalPArgs->mergingHash, dropset, globalPArgs->bipartitionsById, globalPArgs->consensusBipsCanVanish); 
+             }
+         } 
+       break;
+      }
+
     default:
 	printf("Job %d\n", currentJob);
 	assert(0);

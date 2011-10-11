@@ -1051,14 +1051,13 @@ void combineEventsForOneDropset(Array *allDropsets, Dropset *refDropset, Array *
   refDropset->acquiredPrimeE = NULL; 
   refDropset->complexEvents = NULL; 
 
-  /* if(NOT refDropset->taxaToDrop->next) */
-  /*   { */
-  /*     List *iter =  refDropset->ownPrimeE;  */
-  /*     FOR_LIST(iter) */
-  /*     { */
-	
-  /*     } */
-  /*   } */
+  if(NOT refDropset->taxaToDrop->next)
+    {
+      List *iter =  refDropset->ownPrimeE;
+      FOR_LIST(iter)
+       APPEND(iter->value, refDropset->acquiredPrimeE);
+      return; 
+    }
 
   /* gather all events */
   int i; 
@@ -1556,27 +1555,32 @@ Dropset *evaluateEvents(HashTable *mergingHash, Array *bipartitionsById, Array *
   Dropset 
     *result = NULL; 
 
+  int i ; 
+
   List
     *consensusBipsCanVanish = getConsensusBipsCanVanish(bipartitionProfile);
 
   if( NOT mergingHash->entryCount)
     return NULL ;
 
-  if(rogueMode == MRE_CONSENSUS_OPT)
-    {
-      Array *allDropsets = CALLOC(1,sizeof(Array)) ;
-      allDropsets->length = mergingHash->entryCount; 
-      allDropsets->arrayTable = CALLOC(mergingHash->entryCount, sizeof(Dropset*));
+  /* gather dropsets in array  */
+  Array *allDropsets = CALLOC(1,sizeof(Array)) ;
+  allDropsets->length = mergingHash->entryCount; 
+  allDropsets->arrayTable = CALLOC(mergingHash->entryCount, sizeof(Dropset*));
+       
+  int cnt = 0; 
+  HashTableIterator *htIter;
+  FOR_HASH(htIter, mergingHash)
+    {    
+      GET_DROPSET_ELEM(allDropsets,cnt) = getCurrentValueFromHashTableIterator(htIter);
+      cnt++; 
+    }
+  free(htIter); 
+  assert(cnt == mergingHash->entryCount);
   
-      int cnt = 0; 
-      HashTableIterator *htIter;
-      FOR_HASH(htIter, mergingHash)
-	{	  
-	  GET_DROPSET_ELEM(allDropsets,cnt) = getCurrentValueFromHashTableIterator(htIter);
-	  cnt++; 
-	}
-      free(htIter); 
-      assert(cnt == mergingHash->entryCount);
+  /* compute MRE stuff  */
+  if(rogueMode == MRE_CONSENSUS_OPT)
+    { 
       
 #ifdef PARALLEL
       numberOfJobs = allDropsets->length;
@@ -1584,26 +1588,39 @@ Dropset *evaluateEvents(HashTable *mergingHash, Array *bipartitionsById, Array *
       globalPArgs->allDropsets = allDropsets; 
       masterBarrier(THREAD_MRE, globalPArgs); 
 #else
-      int i ; 
+      
       FOR_0_LIMIT(i,allDropsets->length)	  
 	{
 	  Dropset *dropset =  GET_DROPSET_ELEM(allDropsets, i);
 	  dropset->improvement =  getSupportOfMRETree(bipartitionsById, dropset) - cumScore;
 	}
 #endif     
-
-      free(allDropsets->arrayTable);
-      free(allDropsets);
     }
   
-  HashTableIterator *htIter;
-  FOR_HASH(htIter, mergingHash)
+
+  /* evaluate dropsets */
+  if(rogueMode != MRE_CONSENSUS_OPT)
+    {
+#ifdef PARALLEL
+      numberOfJobs = allDropsets->length; 
+      globalPArgs->mergingHash = mergingHash; 
+      globalPArgs->allDropsets = allDropsets; 
+      globalPArgs->bipartitionsById = bipartitionsById; 
+      globalPArgs->consensusBipsCanVanish = consensusBipsCanVanish;
+      masterBarrier(THREAD_EVALUATE_EVENTS, globalPArgs); 
+#else
+      FOR_0_LIMIT(i, allDropsets->length)
+	{
+	  Dropset *dropset =  GET_DROPSET_ELEM(allDropsets, i);   
+	  evaluateDropset(mergingHash, dropset, bipartitionsById, consensusBipsCanVanish); 
+	}
+#endif
+    }
+  
+  FOR_0_LIMIT(i,allDropsets->length)
     {      
       Dropset
-	*dropset = getCurrentValueFromHashTableIterator(htIter);
-
-      if(rogueMode != MRE_CONSENSUS_OPT)
-	evaluateDropset(mergingHash, dropset, bipartitionsById, consensusBipsCanVanish);
+	*dropset =  GET_DROPSET_ELEM(allDropsets, i);
 
       if(NOT result)
 	result = dropset;
@@ -1630,8 +1647,10 @@ Dropset *evaluateEvents(HashTable *mergingHash, Array *bipartitionsById, Array *
 	    result = dropset;
 	}
     }
-  free(htIter);
   freeListFlat(consensusBipsCanVanish);
+
+  free(allDropsets->arrayTable);
+  free(allDropsets);
 
   if(labelPenalty == 0.0 && result->improvement > 0)
     return result;

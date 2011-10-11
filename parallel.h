@@ -13,6 +13,7 @@ extern  pthread_mutex_t mutex;
 #define THREAD_GET_EVENTS 1 
 #define THREAD_COMBINE_EVENTS 2 
 #define THREAD_MRE 3 
+#define THREAD_EVALUATE_EVENTS 4
 
 typedef struct _parArgs 
 {
@@ -23,6 +24,7 @@ typedef struct _parArgs
   int *indexByNumberBits;   
   boolean firstMerge; 
   Array *allDropsets;   
+  List *consensusBipsCanVanish;
 } parallelArguments ; 
 
 

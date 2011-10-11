@@ -342,15 +342,16 @@ IndexList *getDropset(ProfileElem *elemA, ProfileElem *elemB, boolean complement
 	}
     }
 
-  if( NOT numBit)
-    {
-      PR("%d and %d are equal (found during dropset construction)\n", elemA->id, elemB->id);
-      printBitVector(elemA->bitVector, bitVectorLength);
-      PR("\n");
-      printBitVector(elemB->bitVector, bitVectorLength);
-      PR("\n");     
-      exit(-1);
-    }  
+  /* TODO */
+  /* if( NOT numBit) */
+  /*   { */
+  /*     PR("%d and %d are equal (found during dropset construction)\n", elemA->id, elemB->id); */
+  /*     printBitVector(elemA->bitVector, bitVectorLength); */
+  /*     PR("\n"); */
+  /*     printBitVector(elemB->bitVector, bitVectorLength); */
+  /*     PR("\n");      */
+  /*     exit(-1); */
+  /*   }   */
   
   return result; 
 }
