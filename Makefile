@@ -7,7 +7,7 @@ LFLAGS =   -lm
 ifeq ($(mode), debug)
  CFLAGS += -g
 else
- CFLAGS += -march=native -O3
+ CFLAGS += -O3 # -march=native
 ifeq ($(mode), profile)
  CFLAGS += -pg -g
 endif
