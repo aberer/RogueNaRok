@@ -1,6 +1,6 @@
 CC = gcc 
 
-CFLAGS = -Wall -DNDEBUG   #   ##  -funroll-loops -D_GNU_SOURCE
+CFLAGS = -Wall #  -DNDEBUG   #   ##  -funroll-loops -D_GNU_SOURCE
 
 LFLAGS =   -lm
 
@@ -27,7 +27,7 @@ TARGETS = RogueNaRok rnr-prune rnr-lsi  rnr-tii  rnr-mast
 
 all :  $(TARGETS)
 
-rnr-objs = common.o RogueNaRok.o  Tree.o BitVector.o HashTable.o List.o Array.o  Dropset.o ProfileElem.o legacy.o newFunctions.o parallel.o
+rnr-objs = common.o RogueNaRok.o  Tree.o BitVector.o HashTable.o List.o Array.o  Dropset.o ProfileElem.o legacy.o newFunctions.o parallel.o Node.o
 lsi-objs = rnr-lsi.o common.o Tree.o BitVector.o   HashTable.o legacy.o newFunctions.o List.o
 tii-objs = rnr-tii.o common.o BitVector.o Tree.o HashTable.o List.o legacy.o newFunctions.o 
 mast-objs = rnr-mast.o common.o List.o Tree.o BitVector.o HashTable.o legacy.o newFunctions.o

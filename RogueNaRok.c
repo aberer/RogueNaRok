@@ -9,6 +9,7 @@
 #include "Dropset.h"
 #include "legacy.h"
 #include "newFunctions.h"
+#include "Node.h"
 
 #ifdef PARALLEL
 #include "parallel.h"
@@ -1036,20 +1037,12 @@ void createOrUpdateMergingHash(All *tr, HashTable *mergingHash, Array *bipartiti
 }
 
 
-void bitSetterHelper(BitVector *bipartitionsSeen, BitVector *bipConflict, int a)
-{
-  if(NTH_BIT_IS_SET(bipartitionsSeen, a))
-    FLIP_NTH_BIT(bipConflict, a);
-  else
-    FLIP_NTH_BIT(bipartitionsSeen, a);
-}
-
-
 void combineEventsForOneDropset(Array *allDropsets, Dropset *refDropset, Array *bipartitionsById)
 {
   List *allEventsUncombined = NULL;
   refDropset->acquiredPrimeE = NULL; 
-  refDropset->complexEvents = NULL; 
+  refDropset->complexEvents = NULL;
+  int eventCntr = 0; 
 
   if(NOT refDropset->taxaToDrop->next)
     {
@@ -1069,115 +1062,23 @@ void combineEventsForOneDropset(Array *allDropsets, Dropset *refDropset, Array *
 	  List
 	    *iter = currentDropset->ownPrimeE; 
 	  FOR_LIST(iter)
+	  {
 	    APPEND(iter->value, allEventsUncombined);
+	    eventCntr++;
+	  }
 	}
     }
 
-  /* identify multi-merger bips  */
-  BitVector
-    *bipartitionsSeen = CALLOC(GET_BITVECTOR_LENGTH(bipartitionsById->length), sizeof(BitVector)),
-    *bipConflict = CALLOC(GET_BITVECTOR_LENGTH(bipartitionsById->length), sizeof(BitVector));  
-  List *iter = allEventsUncombined;
-  FOR_LIST(iter)
-  {
-    MergingBipartitions mb = ((MergingEvent*)iter->value)->mergingBipartitions; 
-    bitSetterHelper(bipartitionsSeen, bipConflict, mb.pair[0]);
-    bitSetterHelper(bipartitionsSeen, bipConflict, mb.pair[1]);
-  }
-
-  /* add multi-merger events to dummy */
-  List *complexEvents = NULL;   
-  int highest = 0; 
-
-  iter = allEventsUncombined; 
-  FOR_LIST(iter)
-  {
-    MergingEvent *mEvent = (MergingEvent*)iter->value;  
-    int a = mEvent->mergingBipartitions.pair[0], 
-      b = mEvent->mergingBipartitions.pair[1];
-    if(NTH_BIT_IS_SET(bipConflict, a)
-       || NTH_BIT_IS_SET(bipConflict, b))
-      {
-	APPEND(mEvent, complexEvents);
-	highest++; 	
-      }
-    else      
-      APPEND(mEvent, refDropset->acquiredPrimeE);
-  }
-  
-  if(highest)
-    {
-      refDropset->complexEvents = findIndependentComponents(complexEvents, highest);
-      freeListFlat(complexEvents);
-    } 
-
-  freeListFlat(allEventsUncombined);  
-  free(bipConflict);
-  free(bipartitionsSeen);
-}
-
-
-typedef struct _node
-{
-  int id; 
-  boolean visited; 
-  IndexList *edges;
-} Node; 
-
-
-
-boolean nodeEqual(HashTable *hashTable, void *entryA, void *entryB)
-{
-  return ((Node*)entryA)->id  == ((Node*)entryB)->id;  
-}
-
-
-unsigned int nodeHashValue(HashTable *hashTable, void *value)
-{
-  return ((Node*)value)->id; 
-}
-
-
-IndexList *findAnIndependentComponent(HashTable *allNodes, Node *thisNode)
-{
-  IndexList *iter  = thisNode->edges;   
-  thisNode->visited = TRUE;
-  IndexList *result = NULL; 
-  APPEND_INT(thisNode->id, result);
-
-  FOR_LIST(iter)
-  {
-    Node *found = searchHashTableWithInt(allNodes, iter->index);
-    if(  NOT found->visited)
-      {
-	IndexList *list = findAnIndependentComponent(allNodes, found);
-	result = concatenateIndexList(list, result);
-      }
-  }
-  
-  return result; 
-}
-
-void freeNode(void *value)
-{
-  Node *node = value; 
-  freeIndexList(node->edges);
-  free(node);
-}
-
-
-List *findIndependentComponents(List *singleVertices, int highest)
-{
-  List *independentComponents = NULL; 
-  HashTable *allNodes = createHashTable(highest * 10, NULL, nodeHashValue, nodeEqual);
-  Node *found;
-  
   /* transform the edges into nodes */
-  List *iter = singleVertices; 
+  HashTable *allNodes = createHashTable(eventCntr * 10, NULL, nodeHashValue, nodeEqual);
+  Node *found;
+  List *iter = allEventsUncombined; 
   FOR_LIST(iter)
   {
-    int a = ((MergingEvent*)iter->value)->mergingBipartitions.pair[0]; 
-    int b = ((MergingEvent*)iter->value)->mergingBipartitions.pair[1]; 
+    MergingEvent *me = (MergingEvent*)iter->value;
+    int a = me->mergingBipartitions.pair[0]; 
+    int b = me->mergingBipartitions.pair[1]; 
+
 
     if( ( found = searchHashTableWithInt(allNodes, a) ) )
       APPEND_INT(b,found->edges); 
@@ -1200,26 +1101,39 @@ List *findIndependentComponents(List *singleVertices, int highest)
       }
   }
 
-  /* search connected components */
-  HashTableIterator *htIter; 
-  FOR_HASH(htIter, allNodes)
-    {
-      Node *node = getCurrentValueFromHashTableIterator(htIter);      
-      if( NOT node->visited)
-	{
-	  IndexList
-	    *component = findAnIndependentComponent(allNodes,node);
-	  MergingEvent *me  = CALLOC(1,sizeof(MergingEvent));
-	  me->mergingBipartitions.many = component; 
-	  me->isComplex = TRUE;
-	  APPEND(me,independentComponents);
-	}
-    }
-  free(htIter);
+  iter = allEventsUncombined;
+  FOR_LIST(iter)
+  {
+    MergingEvent *me = (MergingEvent*)iter->value;
+    int a = me->mergingBipartitions.pair[0],
+      b = me->mergingBipartitions.pair[1]; 
+    
+    Node *foundA = searchHashTableWithInt(allNodes,a),
+      *foundB = searchHashTableWithInt(allNodes,b);
+
+    if(NOT foundA->edges->next
+       && NOT foundB->edges->next) 
+      {
+	assert(foundA->edges->index == foundB->id ); 
+	assert(foundB->edges->index == foundA->id ); 
+	APPEND(me, refDropset->acquiredPrimeE); 
+      }
+    else
+      {	
+	IndexList
+	  *component = findAnIndependentComponent(allNodes,foundA);
+	if( component)
+	  {
+	    MergingEvent *complexMe  = CALLOC(1,sizeof(MergingEvent));
+	    complexMe->mergingBipartitions.many = component; 
+	    complexMe->isComplex = TRUE;
+	    APPEND(complexMe,refDropset->complexEvents);
+	  }
+      }
+  }
   
-  /* free the stuff */
   destroyHashTable(allNodes, freeNode);
-  return independentComponents; 
+  freeListFlat(allEventsUncombined);  
 }
 
 
