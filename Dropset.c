@@ -342,7 +342,7 @@ IndexList *getDropset(ProfileElem *elemA, ProfileElem *elemB, boolean complement
 	}
     }
 
-  /* TODO */
+  /* TODO-error */
   /* if( NOT numBit) */
   /*   { */
   /*     PR("%d and %d are equal (found during dropset construction)\n", elemA->id, elemB->id); */

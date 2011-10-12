@@ -64,10 +64,6 @@ BitVector *droppedTaxa,
 double labelPenalty = 0., 
   timeInc; 
 
-/* lazy */
-void getSupportGainedThreshold(MergingEvent *me, Array *bipartitionsById);
-List *findIndependentComponents(List *singleVertices, int highest);
-
 #ifdef MYDEBUG
 void debug_dropsetConsistencyCheck(HashTable *mergingHash)
 {
@@ -415,6 +411,94 @@ int getSupportOfMRETreeHelper(Array *bipartitionProfile, Dropset *dropset)
   return result; 
 }
 
+
+void getSupportGainedThreshold(MergingEvent *me, Array *bipartitionsById)
+{
+  int
+    i; 
+  me->supportGained = 0; 
+  BitVector
+    *tmp;
+  boolean isInMLTree = FALSE; 
+
+  if(me->isComplex)
+    {
+      IndexList
+	*iI = me->mergingBipartitions.many;  
+      
+      int bestPossible = 0; 
+      FOR_LIST(iI)
+      {	
+	ProfileElem
+	  *elem = GET_PROFILE_ELEM(bipartitionsById, iI->index);
+	bestPossible += elem->treeVectorSupport;
+	isInMLTree |= elem->isInMLTree;
+      }
+
+      if( rogueMode == VANILLA_CONSENSUS_OPT && bestPossible < thresh)
+	return ; 
+      if( rogueMode == ML_TREE_OPT && NOT isInMLTree)
+	return ;
+
+      tmp = CALLOC(treeVectorLength, sizeof(BitVector));
+      
+      /* create new bip vector */
+      iI = me->mergingBipartitions.many;  
+      FOR_LIST(iI)
+      {
+	ProfileElem
+	  *elem = GET_PROFILE_ELEM(bipartitionsById, iI->index);
+    
+	FOR_0_LIMIT(i, treeVectorLength)
+	  tmp[i] |= elem->treeVector[i];
+      }
+    }
+  else
+    {
+      ProfileElem
+	*elemA = GET_PROFILE_ELEM(bipartitionsById, me->mergingBipartitions.pair[0]),
+	*elemB = GET_PROFILE_ELEM(bipartitionsById, me->mergingBipartitions.pair[1]);      
+   
+      if(rogueMode == VANILLA_CONSENSUS_OPT && elemA->treeVectorSupport + elemB->treeVectorSupport < thresh)
+      	return;
+      
+      isInMLTree = elemA->isInMLTree || elemB->isInMLTree;       
+      if(rogueMode == ML_TREE_OPT && NOT isInMLTree)
+	return; 
+      
+      tmp = CALLOC(treeVectorLength, sizeof(BitVector));      
+      FOR_0_LIMIT(i,treeVectorLength)
+	tmp[i] = elemA->treeVector[i] | elemB->treeVector[i];
+    }
+
+  int newSup = genericBitCount(tmp, treeVectorLength);
+  switch (rogueMode)
+    {
+    case MRE_CONSENSUS_OPT:
+      {
+	me->supportGained = computeSupport ? newSup : 1; 
+	break; 
+      }
+    case VANILLA_CONSENSUS_OPT: 
+      {
+	if(rogueMode == VANILLA_CONSENSUS_OPT  && newSup > thresh)
+	  me->supportGained = computeSupport ? newSup : 1 ;
+	break; 
+      }
+    case ML_TREE_OPT: 
+      {
+	if(isInMLTree )
+	  me->supportGained = computeSupport ? newSup : 1 ;
+	break; 
+      }
+    default : 
+      assert(0);
+    }
+  
+  free(tmp);
+}
+
+
 int getSupportOfMRETree(Array *bipartitionsById,  Dropset *dropset)
 {
   List
@@ -601,7 +685,6 @@ boolean checkValidityOfEvent(BitVector *obsoleteBips, List *elem)
   if(killP)
     {
       free(me);
-      /* free(elem); */
       return FALSE;
     }
   else
@@ -1228,93 +1311,6 @@ void getLostSupportThreshold(MergingEvent *me, Array *bipartitionsById)
 	  }
 	}
     }
-}
-
-
-void getSupportGainedThreshold(MergingEvent *me, Array *bipartitionsById)
-{
-  int
-    i; 
-  me->supportGained = 0; 
-  BitVector
-    *tmp;
-  boolean isInMLTree = FALSE; 
-
-  if(me->isComplex)
-    {
-      IndexList
-	*iI = me->mergingBipartitions.many;  
-      
-      int bestPossible = 0; 
-      FOR_LIST(iI)
-      {	
-	ProfileElem
-	  *elem = GET_PROFILE_ELEM(bipartitionsById, iI->index);
-	bestPossible += elem->treeVectorSupport;
-	isInMLTree |= elem->isInMLTree;
-      }
-
-      if( rogueMode == VANILLA_CONSENSUS_OPT && bestPossible < thresh)
-	return ; 
-      if( rogueMode == ML_TREE_OPT && NOT isInMLTree)
-	return ;
-
-      tmp = CALLOC(treeVectorLength, sizeof(BitVector));
-      
-      /* create new bip vector */
-      iI = me->mergingBipartitions.many;  
-      FOR_LIST(iI)
-      {
-	ProfileElem
-	  *elem = GET_PROFILE_ELEM(bipartitionsById, iI->index);
-    
-	FOR_0_LIMIT(i, treeVectorLength)
-	  tmp[i] |= elem->treeVector[i];
-      }
-    }
-  else
-    {
-      ProfileElem
-	*elemA = GET_PROFILE_ELEM(bipartitionsById, me->mergingBipartitions.pair[0]),
-	*elemB = GET_PROFILE_ELEM(bipartitionsById, me->mergingBipartitions.pair[1]);      
-   
-      if(rogueMode == VANILLA_CONSENSUS_OPT && elemA->treeVectorSupport + elemB->treeVectorSupport < thresh)
-      	return;
-      
-      isInMLTree = elemA->isInMLTree || elemB->isInMLTree;       
-      if(rogueMode == ML_TREE_OPT && NOT isInMLTree)
-	return; 
-      
-      tmp = CALLOC(treeVectorLength, sizeof(BitVector));      
-      FOR_0_LIMIT(i,treeVectorLength)
-	tmp[i] = elemA->treeVector[i] | elemB->treeVector[i];
-    }
-
-  int newSup = genericBitCount(tmp, treeVectorLength);
-  switch (rogueMode)
-    {
-    case MRE_CONSENSUS_OPT:
-      {
-	me->supportGained = computeSupport ? newSup : 1; 
-	break; 
-      }
-    case VANILLA_CONSENSUS_OPT: 
-      {
-	if(rogueMode == VANILLA_CONSENSUS_OPT  && newSup > thresh)
-	  me->supportGained = computeSupport ? newSup : 1 ;
-	break; 
-      }
-    case ML_TREE_OPT: 
-      {
-	if(isInMLTree )
-	  me->supportGained = computeSupport ? newSup : 1 ;
-	break; 
-      }
-    default : 
-      assert(0);
-    }
-  
-  free(tmp);
 }
 
 
