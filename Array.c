@@ -1,3 +1,4 @@
+
 #include "Array.h"
 
 void freeArray(Array *array)

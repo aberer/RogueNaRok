@@ -1,5 +1,3 @@
-/* here we have the leaf stability as described in
-   thorley1999. Frequently used by Dunn and Smith  */
 
 #include <math.h>
 #include <time.h> 
@@ -17,13 +15,10 @@
 #include "Tree.h"
 #include "BitVector.h"
 
-/* TODO
-  • verify that your stuff works...those normalisations are pretty weird =/
-*/
 
 #define PROG_NAME "RnR-lsi"
-#define PROG_VERSION "0.1"
-#define PROG_RELEASE_DATE "not yet"
+#define PROG_VERSION "1.0"
+#define PROG_RELEASE_DATE "2011-10-12"
 
 #define FLIP_NTH_BIT(bitVector,n) (bitVector[(n) / MASK_LENGTH] |= mask32[ (n) % MASK_LENGTH ])
 #define NTH_BIT_IS_SET(bitVector,n) (bitVector[(n) / MASK_LENGTH] & mask32[(n) % MASK_LENGTH])

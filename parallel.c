@@ -187,6 +187,8 @@ void startThreads()
   jobCycle        = 0;
   threadJob       = 0;
 
+  pinToCore(0);
+
   printf("\nThis is the master thread\n");
 
   pthread_attr_init(&attr);

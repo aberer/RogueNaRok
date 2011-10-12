@@ -17,8 +17,8 @@
 #endif
 
 #define PROG_NAME "RogueNaRok"
-#define PROG_VERSION "0.1"
-#define PROG_RELEASE_DATE "not yet"
+#define PROG_VERSION "1.0"
+#define PROG_RELEASE_DATE "2011-10-12"
 
 /* #define PRINT_VERY_VERBOSE */
 /* #define MYDEBUG */

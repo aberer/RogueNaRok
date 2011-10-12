@@ -17,8 +17,8 @@
 #include "sharedVariables.h"
 
 #define PROG_NAME  "RnR-tii"
-#define PROG_VERSION "0.1"
-#define PROG_RELEASE_DATE "not yet" 
+#define PROG_VERSION "1.0"
+#define PROG_RELEASE_DATE "2011-10-12"
 
 
 typedef unsigned short int nodeDistance_t;

@@ -18,8 +18,8 @@
 #include "newFunctions.h"
 
 #define PROG_NAME "RnR-prune"
-#define PROG_VERSION "0.1"
-#define PROG_RELEASE_DATE "not yet"
+#define PROG_VERSION "1.0"
+#define PROG_RELEASE_DATE "2011-10-12"
 
 
 extern char run_id[128];
