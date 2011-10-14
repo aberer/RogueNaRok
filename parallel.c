@@ -19,7 +19,7 @@ void pinToCore(int tid)
   cpu_set_t cpuset;
          
   CPU_ZERO(&cpuset);    
-  CPU_SET(tid, &cpuset);
+  CPU_SET( tid, &cpuset);
 
   if(pthread_setaffinity_np(pthread_self(), sizeof(cpu_set_t), &cpuset) != 0)
     {
@@ -187,7 +187,9 @@ void startThreads()
   jobCycle        = 0;
   threadJob       = 0;
 
+#ifndef PORTABLE_PTHREADS
   pinToCore(0);
+#endif
 
   printf("\nThis is the master thread\n");
 

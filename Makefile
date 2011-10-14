@@ -1,5 +1,6 @@
 CC = gcc 
 
+
 CFLAGS = -Wall -DNDEBUG -D_GNU_SOURCE #   ##  -funroll-loops 
 
 LFLAGS = -lm
@@ -13,7 +14,7 @@ ifeq ($(mode), profile)
 endif
 endif
 ifeq ($(mode), parallel)
-CFLAGS += -DPARALLEL #  -DPORTABLE_PTHREADS 
+CFLAGS += -DPARALLEL -DPORTABLE_PTHREADS 
 LFLAGS += -pthread 
 endif
 ifeq ($(mode), parallelDebug)
