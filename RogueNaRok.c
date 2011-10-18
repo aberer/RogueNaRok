@@ -24,10 +24,10 @@
 /* #define MYDEBUG */
 
 #define PRINT_DROPSETS
-#define PRINT_TIME
+/* #define PRINT_TIME */
 
 /* try to produce minimal dropsets */
-#define MIN_DROPSETS
+/* #define MIN_DROPSETS */
 
 #define VANILLA_CONSENSUS_OPT  0
 #define ML_TREE_OPT 1
@@ -198,7 +198,7 @@ boolean myBitVectorEqual(ProfileElem *elemA, ProfileElem *elemB)
 
 boolean canMergeWithComplement(ProfileElem *elem)
 {
-  return (mxtips - taxaDropped  - 2 *  elem->numberOfBitsSet) <= maxDropsetSize + 1;
+  return mxtips - taxaDropped - 2 * elem->numberOfBitsSet <= 2 * maxDropsetSize;
 }
 
 
@@ -295,9 +295,7 @@ boolean checkForMergerAndAddEvent(boolean complement, ProfileElem *elemA, Profil
 /* boolean bothDropsetsRelevant(ProfileElem *elemA) */
 boolean bothDropsetsRelevant(int numBits)
 {
-  return 
-    numBits <= maxDropsetSize && 
-    numBits >= mxtips - taxaDropped - maxDropsetSize; 
+  return numBits <= maxDropsetSize && numBits >= mxtips - taxaDropped - maxDropsetSize; 
 }
 
 
@@ -1587,7 +1585,7 @@ void cleanup_updateNumBitsAndCleanArrays(Array *bipartitionProfile, Array *bipar
       /* check if number of bits has changed  */
       if(NOT NTH_BIT_IS_SET(mergingBipartitions,elem->id)) 
 	{	  
-	  if( ABS(elem->numberOfBitsSet - NUMBER_BITS_IN_COMPLEMENT(elem)) <= maxDropsetSize+1 )
+	  if( mxtips - taxaDropped - 2 * elem->numberOfBitsSet <= 2 * maxDropsetSize )	  
 	    FLIP_NTH_BIT(newCandidates, elem->id);
 	  IndexList *iter = dropset->taxaToDrop;
 	  boolean taxonDroppedP = FALSE;      
