@@ -342,7 +342,7 @@ IndexList *getDropset(ProfileElem *elemA, ProfileElem *elemB, boolean complement
 	}
     }
 
-  assert(NOT numBit);
+  assert(numBit);
 
   return result; 
 }

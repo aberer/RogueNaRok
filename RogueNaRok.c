@@ -24,7 +24,7 @@
 /* #define MYDEBUG */
 
 #define PRINT_DROPSETS
-/* #define PRINT_TIME */
+#define PRINT_TIME
 
 /* try to produce minimal dropsets */
 /* #define MIN_DROPSETS */
