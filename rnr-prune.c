@@ -49,7 +49,7 @@
 
 #define PROG_NAME "RnR-prune"
 #define PROG_VERSION "1.0"
-#define PROG_RELEASE_DATE "2011-10-12"
+#define PROG_RELEASE_DATE "2011-10-25"
 
 
 extern char run_id[128];

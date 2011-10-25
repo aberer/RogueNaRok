@@ -45,7 +45,7 @@
 
 #define PROG_NAME "RnR-mast"
 #define PROG_VERSION "1.0"
-#define PROG_RELEASE_DATE "2011-10-12"
+#define PROG_RELEASE_DATE "2011-10-25"
 
 /* 
    NOTICE: as the numbering of the taxa is 1-based, throughout this
