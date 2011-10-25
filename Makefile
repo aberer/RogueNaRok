@@ -1,14 +1,12 @@
 CC = gcc 
 
-
-CFLAGS = -Wall -D_GNU_SOURCE #    -DNDEBUG
-
+CFLAGS = -Wall -D_GNU_SOURCE # -DNDEBUG
 LFLAGS = -lm
 
 ifeq ($(mode), debug)
  CFLAGS += -g
 else
- CFLAGS += -O3  -march=native
+ CFLAGS += -O3 # -march=native
 ifeq ($(mode), profile)
  CFLAGS += -pg -g
 endif
@@ -55,5 +53,5 @@ endif
 	$(CC) -c -o $@ $< $(CFLAGS)
 
 clean : 
-	$(RM) $(rnr-objs) $(lsi-objs) $(tii-objs) $(mast-objs) $(prune-objs) $(TARGETS)  $(TESTS) $(rnr-test-objs)
+	$(RM) $(rnr-objs) $(lsi-objs) $(tii-objs) $(mast-objs) $(prune-objs) $(TARGETS)  $(TESTS) $(rnr-test-objs) RogueNaRok-parallel
 
