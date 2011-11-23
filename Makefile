@@ -33,20 +33,20 @@ mast-objs = rnr-mast.o common.o List.o Tree.o BitVector.o HashTable.o legacy.o n
 prune-objs = rnr-prune.o common.o Tree.o BitVector.o HashTable.o  legacy.o newFunctions.o List.o
 
 rnr-lsi: $(lsi-objs)
-	$(CC) $(LFLAGS) -o $@   $^ $(CFLAGS)
+	$(CC) -o $@   $^ $(CFLAGS) $(LFLAGS)
 rnr-tii: $(tii-objs)
-	$(CC) $(LFLAGS) -o $@   $^ $(CFLAGS)
+	$(CC) -o $@   $^ $(CFLAGS) $(LFLAGS)
 rnr-mast: $(mast-objs)
-	$(CC) $(LFLAGS) -o $@   $^ $(CFLAGS)
+	$(CC) -o $@   $^ $(CFLAGS) $(LFLAGS) 
 rnr-prune: $(prune-objs)
-	$(CC) $(LFLAGS) -o $@   $^ $(CFLAGS)
+	$(CC) -o $@   $^ $(CFLAGS) $(LFLAGS)
 
 ifeq ($(mode),parallel)
 RogueNaRok: $(rnr-objs)
-	$(CC) $(LFLAGS) -o $@-parallel   $^ $(CFLAGS)
+	$(CC) -o $@-parallel   $^ $(CFLAGS) $(LFLAGS)
 else
 RogueNaRok: $(rnr-objs)
-	$(CC) $(LFLAGS) -o $@   $^ $(CFLAGS)
+	$(CC) -o $@   $^ $(CFLAGS) $(LFLAGS)
 endif
 
 %.o : %.c $(DEPS)
