@@ -1570,10 +1570,10 @@ Dropset *evaluateEvents(HashTable *mergingHash, Array *bipartitionsById, Array *
 	  
 	  double oldQuality =  labelPenalty == 0.0  
 	    ? result->improvement * drSize 
-	    :  (double)(result->improvement / (double)(computeSupport ?  numberOfTrees : 1.0)) - (double)resSize;
+	    :  (double)(result->improvement / (double)(computeSupport ?  numberOfTrees : 1.0)) - labelPenalty * (double)resSize;
 	  double newQuality = labelPenalty == 0.0 
 	    ? dropset->improvement * resSize
-	    : (double)(dropset->improvement / (double)(computeSupport ? numberOfTrees : 1.0)) - (double)drSize; 
+	    : (double)(dropset->improvement / (double)(computeSupport ? numberOfTrees : 1.0)) - labelPenalty * (double)drSize; 
 	  
 	  if( (newQuality  >  oldQuality) )
 	    result = dropset;	  
@@ -1584,11 +1584,15 @@ Dropset *evaluateEvents(HashTable *mergingHash, Array *bipartitionsById, Array *
   free(allDropsets->arrayTable);
   free(allDropsets);
 
-  if(labelPenalty == 0.0 && result->improvement > 0)
+  if((result->improvement / (computeSupport ? numberOfTrees : 1.0) - labelPenalty * lengthIndexList(result->taxaToDrop))  > 0.0 )
     return result;
-  else if(labelPenalty != 0.0 && (result->improvement / (computeSupport ? numberOfTrees : 1.0) - lengthIndexList(result->taxaToDrop))  > 0.0 )
-    return result; 
-  else 
+
+  /* if(labelPenalty == 0.0 && result->improvement > 0) */
+  /*   return result; */
+  /* else if(labelPenalty != 0.0 && (result->improvement / (computeSupport ? numberOfTrees : 1.0) - labelPenalty * lengthIndexList(result->taxaToDrop))  > 0.0 ) */
+  /*   return result; */
+
+  else
     return NULL;
 }
 
