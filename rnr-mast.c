@@ -701,7 +701,9 @@ void printMastToFile(All *tr, FILE *bootstrapFile,  BitVector *mast, FILE *resul
 {
   int
     droppedTaxaNum = 0, 
-    /* tips, */
+#ifdef DEBUG
+    tips,
+#endif
     i;
 
   rewind(bootstrapFile);  
@@ -713,9 +715,10 @@ void printMastToFile(All *tr, FILE *bootstrapFile,  BitVector *mast, FILE *resul
 	pruneTaxon(tr,i+1);
 	droppedTaxaNum++;
       }
-  
-  /* tips = countTips(tr->start, tr->mxtips) + countTips(tr->start->back, tr->mxtips); */
+#ifdef DEBUG  
+  tips = countTips(tr->start, tr->mxtips) + countTips(tr->start->back, tr->mxtips);
   assert((unsigned)tips == ((unsigned)tr->mxtips - droppedTaxaNum));
+#endif
   char *tmp = writeTreeToString(tr, FALSE);
   fprintf(result, "%s", tmp);
   printBothOpen("MAST tree: %s", tmp);

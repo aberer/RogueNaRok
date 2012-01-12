@@ -1,12 +1,12 @@
 CC = gcc 
 
-CFLAGS = -Wall -D_GNU_SOURCE  -DNDEBUG
+CFLAGS = -Wall -D_GNU_SOURCE
 LFLAGS = -lm
 
 ifeq ($(mode), debug)
  CFLAGS += -g
 else
- CFLAGS += -O3 # -march=native
+ CFLAGS += -O3 -DNDEBUG # -march=native
 ifeq ($(mode), profile)
  CFLAGS += -pg -g
 endif

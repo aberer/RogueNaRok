@@ -944,7 +944,7 @@ static boolean treeNeedCh (FILE *fp, int c1, char *where)
   putchar('\n');
 
   if(c1 == ':')    
-    printf("RAxML may be expecting to read a tree that contains branch lengths\n");
+    printf("RogueNaRok may be expecting to read a tree that contains branch lengths\n");
 
   return FALSE;
 }
@@ -1163,8 +1163,8 @@ int treeReadLen (FILE *fp, All *tr,
 	{
 	  if(completeTree)
 	    {
-	      printBothOpen("Hello this is your friendly RAxML tree parsing routine\n");
-	      printBothOpen("The RAxML option you are uisng requires to read in only complete trees\n");
+	      printBothOpen("Hello this is your friendly RogueNaRok tree parsing routine\n");
+	      printBothOpen("The RogueNaRok option you are uisng requires to read in only complete trees\n");
 	      printBothOpen("with %d taxa, there is at least one tree with %d taxa though ... exiting\n", tr->mxtips, tr->ntips);
 	      exit(-1);
 	    }

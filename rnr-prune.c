@@ -40,7 +40,6 @@
 #include <assert.h>
 #include <string.h>
 
-#include "common.h"
 #include "Tree.h"
 #include "List.h"
 #include "BitVector.h"
@@ -53,7 +52,6 @@
 
 
 extern char run_id[128];
-extern char *workdir;
 extern double masterTime;
 extern int tid;
 extern int NumberOfThreads; 
@@ -168,7 +166,7 @@ int main(int argc, char *argv[])
   programVersion = PROG_VERSION;
   programReleaseDate = PROG_RELEASE_DATE; 
 
-  while((c = getopt(argc,argv, "hi:t:x:n:")) != -1)
+  while((c = getopt(argc,argv, "hi:t:x:n:w:")) != -1)
     {
       switch(c)
 	{

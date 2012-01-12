@@ -2166,7 +2166,7 @@ int main(int argc, char *argv[])
   programVersion = PROG_VERSION;
   programReleaseDate  = PROG_RELEASE_DATE;
   
-  while ((c = getopt (argc, argv, "i:t:n:x:whc:s:bT:L:")) != -1)
+  while ((c = getopt (argc, argv, "i:t:n:x:w:hc:s:bT:L:")) != -1)
     switch (c)
       {
       case 'i':

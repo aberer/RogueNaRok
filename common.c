@@ -31,7 +31,7 @@
 
 #include "common.h"
 
-#define ALLOW_OVERWRITE_INFO_FILE TRUE
+#define ALLOW_OVERWRITE_INFO_FILE FALSE
 
 extern void printHelpFile();
 
@@ -129,7 +129,7 @@ FILE *myfopen(const char *path, const char *mode)
       else
 	{
 	  if(processID == 0)
-	    printf("The file %s RAxML wants to open for writing or appending can not be opened [mode: %s], exiting ...\n",
+	    printf("The file %s RogueNaRok wants to open for writing or appending can not be opened [mode: %s], exiting ...\n",
 		   path, mode);
 	  exit(-1);
 	  return (FILE *)NULL;
@@ -142,6 +142,13 @@ void setupInfoFile()
 {
   char *result = CALLOC(1024, sizeof(char));
   strcpy(result,         workdir);
+
+  if(strcmp(workdir, "")) 
+    {
+      /* TODO not windows compatible */      
+      strcat(result,         "/");
+    }
+
   strcat(result,         programName);
   strcat(result,         "_info");
   strcat(result,         ".");
@@ -149,7 +156,7 @@ void setupInfoFile()
   
   if( NOT ALLOW_OVERWRITE_INFO_FILE && filexists(result))
     {
-      printf("The run-id >%s< you specified already exists. Aborting in order to protect the output of this previous run.\n", run_id);
+      printf("The run-id >%s< you specified already exists in folder >%s<. Aborting in order to protect the output of this previous run.\n", run_id, workdir);
       exit(-1);
     }
 
@@ -182,6 +189,12 @@ FILE *getOutputFileFromString(char *fileName)
 
   char result[1024];
   strcpy(result,         workdir);
+
+  if(strcmp(workdir, ""))
+    {
+      strcat(result, "/") ; 
+    } 
+
   strcat(result,         programName);
   strcat(result,         "_");
   strcat(result,         fileName);

@@ -362,6 +362,7 @@ int main(int argc, char *argv[])
 	  strcpy(run_id, optarg);
 	  break; 
 	case 'w':
+	  /* printf("optarg : %s\n", optarg);  */
 	  strcpy(workdir, optarg);
 	  break;
 	case 'x':

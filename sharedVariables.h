@@ -39,7 +39,7 @@ pthread_mutex_t mutex;
 
 extern char *infoFileName,
   run_id[128],
-  *workdir, 
+  workdir[1024], 
   *programName,
   *programVersion, 
   *programReleaseDate;
