@@ -208,7 +208,7 @@ BitVector*** getIntersectionOfRootedTriples(FILE *bootstrapFile, All *tr, int st
       
       FOR_0_LIMIT(i, tr->mxtips)
 	if( NOT NTH_BIT_IS_SET(neglectThose, i))
-	  pruneTaxon(tr, i+1);
+	  pruneTaxon(tr, i);
       
       /* reset bit-vectors */
       FOR_0_LIMIT(i, (tr->mxtips+1))
@@ -652,7 +652,7 @@ void verifyMasts(All *tr, FILE *bootstrapFile, BitVector *taxaToKeep)
       /* prune taxa */
       for(j = 1; j <= tr->mxtips; ++j)
 	if( NOT (NTH_BIT_IS_SET(taxaToKeep, j)) )
-	  pruneTaxon(tr, j+1);
+	  pruneTaxon(tr, j);
       
       if(i == 1 )
 	commonStart = tr->start;
@@ -712,7 +712,9 @@ void printMastToFile(All *tr, FILE *bootstrapFile,  BitVector *mast, FILE *resul
   for(i = 1; i <= tr->mxtips; ++i)
     if( NOT NTH_BIT_IS_SET(mast,i) )
       {
-	pruneTaxon(tr,i+1);
+	/* printf("intending to prune: %d\n", i)	;  */
+
+	pruneTaxon(tr,i);
 	droppedTaxaNum++;
       }
 #ifdef DEBUG  
