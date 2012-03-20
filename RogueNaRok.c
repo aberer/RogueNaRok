@@ -1079,7 +1079,9 @@ void printRogueInformationToFile( All *tr, FILE *rogueOutput, int bestCumEver, i
       printIndexListToFile(rogueOutput, dropsetInRound[i]->taxaToDrop); 
       fprintf(rogueOutput, "\t");
       fprintRogueNames(tr, rogueOutput, dropsetInRound[i]->taxaToDrop);
-      fprintf(rogueOutput, "\t%f\t%f\n", (double)(cumScores[i]  - cumScores[i-1] )/ (double)tr->numberOfTrees,(double)cumScores[i] / (double)((computeSupport ? numberOfTrees : 1 ) * (mxtips-3)) ); 
+      fprintf(rogueOutput, "\t%f\t%f\n", 
+	      (double)(cumScores[i]  - cumScores[i-1] )/ (double)(computeSupport ? tr->numberOfTrees : 1.0),
+	      (double)cumScores[i] / (double)((computeSupport ? numberOfTrees : 1 ) * (mxtips-3)) ); 
       reached = bestCumEver == cumScores[i];
       ++i;
     }
@@ -1921,8 +1923,7 @@ void doomRogues(All *tr, char *bootStrapFileName, char *dontDropFile, char *tree
 
   bestLastTime = cumScore;
   fprintf(rogueOutput, "num\ttaxNum\ttaxon\trawImprovement\tRBIC\n");
-  fprintf(rogueOutput, "%d\tNA\tNA\t%d\t%f\n", 0, 0, (double)cumScore /(numberOfTrees * (mxtips-3)) );
-
+  fprintf(rogueOutput, "%d\tNA\tNA\t%d\t%f\n", 0, 0, (double)cumScore /( (computeSupport ? numberOfTrees : 1 )  * (mxtips-3)) ); 
   PR("[%f] initialisation done (initScore = %f, numBip=%d)\n", updateTime(&timeInc), (double)cumScore / (double)((tr->mxtips-3) * (computeSupport ? tr->numberOfTrees : 1 ) ), bipartitionsById->length);
 
   boolean firstMerge= TRUE;
