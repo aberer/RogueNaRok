@@ -208,7 +208,7 @@ void getTaxonomicInstability(All *tr, char *treesFileName, char *excludeFile)
       
       FOR_0_LIMIT(j,tr->mxtips)
 	if( NOT NTH_BIT_IS_SET(neglectThose, j))
-	  pruneTaxon(tr,j+1);
+	  pruneTaxon(tr,j+1, FALSE);
 
       /* assert that we get the right labels */
       iter = gatherDistances(tr, tr->nodep[1], distances[i], TRUE);

@@ -326,6 +326,21 @@ nodeptr findAnyTip(nodeptr p, int numsp)
 } 
 
 
+void hookupAdd(nodeptr p, nodeptr q, int numBranches)
+{
+  int i ; 
+  
+  p->back = q; 
+  q->back = p; 
+
+  for(i = 0; i < numBranches; ++i)
+    {
+      p->z[i] += q->z[i]; 
+      q->z[i] = p->z[i]; 
+    }
+  
+}
+
 void hookup (nodeptr p, nodeptr q, double *z, int numBranches)
 {
   int i;

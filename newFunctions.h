@@ -38,7 +38,7 @@
 #include "ProfileElem.h"
 
 IndexList *parseToDrop(All *tr, FILE *toDrop);
-void pruneTaxon(All *tr, unsigned int k);
+void pruneTaxon(All *tr, unsigned int k, boolean considerBranchLengths) ;
 BitVector *neglectThoseTaxa(All *tr, char *toDrop);
 Array *getOriginalBipArray(All *tr, FILE *bestTree, FILE *treeFile) ;
 

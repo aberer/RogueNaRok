@@ -109,7 +109,7 @@ void pruneTaxaFromTreeset(char *bootstrapFileName, char *bestTreeFile, char *toD
 
 	  iter = indicesToDrop;
 	  FOR_LIST(iter)
-	    pruneTaxon(tr, iter->index);
+	    pruneTaxon(tr, iter->index, FALSE );
 
 	  char *tmp = writeTreeToString(tr , FALSE);	
 	  fprintf(outf, "%s", tmp);
@@ -127,7 +127,7 @@ void pruneTaxaFromTreeset(char *bootstrapFileName, char *bestTreeFile, char *toD
       readBestTree(tr, bestTree);
       iter = indicesToDrop;
       FOR_LIST(iter)
-	pruneTaxon(tr, iter->index);
+	pruneTaxon(tr, iter->index, TRUE );
       
       char *tmp = writeTreeToString(tr, TRUE); 
       fprintf(outf, "%s", tmp);	  

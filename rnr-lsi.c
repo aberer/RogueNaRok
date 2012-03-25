@@ -244,7 +244,7 @@ void calculateLeafStability(All *tr, char *bootstrapFileName, char *excludeFileN
 	  readBootstrapTree(tr,bootstrapFile);
 	  FOR_0_LIMIT(k,tr->mxtips)
 	    if( NOT NTH_BIT_IS_SET(neglectThose, k))
-	      pruneTaxon(tr,k+1);
+	      pruneTaxon(tr,k+1, FALSE);
 	  extractQuadruplesRecursively(tr, tr->nodep[i+1], quadruples, neglectThose, TRUE);
 	}
  

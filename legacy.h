@@ -138,6 +138,6 @@ ProfileElem *addProfileElem(entry *helem, int vectorLength, int treeVectorLength
 
 
 BitVector *neglectThoseTaxa(All *tr, char *toDrop);
-void pruneTaxon(All *tr, unsigned int k);
+void pruneTaxon(All *tr, unsigned int k, boolean considerBranchLengths);
 BitVector **initBitVector(All *tr, BitVector *vectorLength);
 #endif

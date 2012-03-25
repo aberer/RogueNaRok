@@ -49,6 +49,7 @@ boolean setupTree (All *tr, char *bootstrapTrees);
 void readBestTree(All *tr, FILE *file);  
 void readBootstrapTree(All *tr, FILE *file);
 void hookupDefault (nodeptr p, nodeptr q, int numBranches);
+void hookupAdd (nodeptr p, nodeptr q, int numBranches);
 nodeptr findAnyTip(nodeptr p, int numsp);
 int treeFindTipByLabelString(char  *str, All *tr);
 int getTreeStringLength(char *fileName);

@@ -49,7 +49,7 @@ IndexList *parseToDrop(All *tr, FILE *toDrop)
   return result;
 }
 
-void pruneTaxon(All *tr, unsigned int k) 
+void pruneTaxon(All *tr, unsigned int k, boolean considerBranchLengths) 
 {
   assert(k > 0 && k <= ((unsigned int)(tr->mxtips)));
 
@@ -58,8 +58,11 @@ void pruneTaxon(All *tr, unsigned int k)
     q = p->back,
     q1 = q->next->back,
     q2 = q->next->next->back;
-
-  hookupDefault(q1, q2, tr->numBranches);
+  
+  if(considerBranchLengths)
+    hookupAdd(q1,q2,tr->numBranches); 
+  else
+    hookupDefault(q1,q2,tr->numBranches);
   
   tr->start = findAnyTip(q1, tr->mxtips);
   
