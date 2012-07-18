@@ -25,3 +25,8 @@ Searching for rogues based on bootstrap values drawn onto a ML tree
 Also notice the script utils/pruneWrapper.sh. It facilitates the
 process of obtaining pruned trees from the RogueNaRok search. Call
 without arguments and follow the instructions in the help message.
+
+
+CITATION: 
+If RogueNaRok has been useful for your work, please cite as: 
+* A.J. Aberer, D. Krompass, A. Stamatakis: "Pruning Rogue Taxa Improves Phylogenetic Accuracy: An Efficient Algorithm and Webservice", Systematic Biology, in press.
