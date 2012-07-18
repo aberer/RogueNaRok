@@ -11,4 +11,17 @@ trigger the help message. Just follow the instructions.
 
 More info is available on
 https://github.com/aberer/RogueNaRok/wiki/RogueNaRok . Also, use this
-site for reporting bugs, ask questions of how to employ RogueNaRok.
+site for reporting bugs or ask questions of how to employ RogueNaRok.
+
+QUICK START: 
+Have a look in the "example"-directory. For calling RogueNaRok, simply execute  
+./RogueNaRok -i example/150.bs  -n id
+in the command line. 
+
+Searching for rogues based on bootstrap values drawn onto a ML tree
+(from a bootstrap tree set) is done with
+ ./RogueNaRok -i example/150.bs -t example/150.tre -n id
+
+Also notice the script utils/pruneWrapper.sh. It facilitates the
+process of obtaining pruned trees from the RogueNaRok search. Call
+without arguments and follow the instructions in the help message.
