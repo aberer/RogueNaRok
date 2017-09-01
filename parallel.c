@@ -54,7 +54,7 @@ void pinToCore(int tid)
   if(pthread_setaffinity_np(pthread_self(), sizeof(cpu_set_t), &cpuset) != 0)
     {
       printBothOpen("\n\nThere was a problem finding a physical core for thread number %d to run on.\n", tid);
-      printBothOpen("Probably this happend because you are trying to run more threads than you have cores available,\n");
+      printBothOpen("Probably this happened because you are trying to run more threads than you have cores available,\n");
       printBothOpen("which is a thing you should never ever do again, good bye .... \n\n");
       assert(0);
     }
