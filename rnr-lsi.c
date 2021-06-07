@@ -403,7 +403,9 @@ int main(int argc, char *argv[])
       PR("Something went wrong during tree initialisation. Sorry.\n");
       exit(-1);
     }   
- 
+
+  tr->bitVectorLength = GET_BITVECTOR_LENGTH(tr->mxtips);
+
   calculateLeafStability(tr, bootTrees, excludeFile); 
 
   return 0;
