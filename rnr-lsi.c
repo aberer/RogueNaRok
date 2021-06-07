@@ -47,8 +47,8 @@
 
 
 #define PROG_NAME "RnR-lsi"
-#define PROG_VERSION "1.0"
-#define PROG_RELEASE_DATE "2011-10-25"
+#define PROG_VERSION "1.0.1"
+#define PROG_RELEASE_DATE "2021-06-07"
 
 #define FLIP_NTH_BIT(bitVector,n) (bitVector[(n) / MASK_LENGTH] |= mask32[ (n) % MASK_LENGTH ])
 #define NTH_BIT_IS_SET(bitVector,n) (bitVector[(n) / MASK_LENGTH] & mask32[(n) % MASK_LENGTH])
