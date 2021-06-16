@@ -95,6 +95,7 @@ typedef struct _All
   int mxtips;
   int numberOfTrees;
   int bitVectorLength;
+  nodeptr p0;
   nodeptr *nodep;
   int ntips;
   int nextnode; 
