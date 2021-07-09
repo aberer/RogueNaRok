@@ -427,7 +427,8 @@ int getSupportOfMRETreeHelper(Array *bipartitionProfile, Dropset *dropset)
       if(compatibleP)
 	addElemToArray(GET_PROFILE_ELEM(bipartitionProfile,i), mreBips);
     }
-
+  free(taxaDroppedHere);
+	
   if(computeSupport)
     FOR_0_LIMIT(i,mreBips->length)      
       result +=  GET_PROFILE_ELEM(mreBips,i)->treeVectorSupport;
