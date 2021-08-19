@@ -185,7 +185,11 @@ int main(int argc, char *argv[])
 	case 'x':	  
 	  excludeFileName = optarg;
 	  break;
-	case 'h': 
+	case 'h':
+          {
+            printHelpFile();
+            exit(0);
+          }
 	default:
 	  {
 	    printHelpFile();

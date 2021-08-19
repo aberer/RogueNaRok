@@ -369,6 +369,10 @@ int main(int argc, char *argv[])
 	  excludeFile = optarg;
 	  break;
 	case 'h':
+          {
+            printHelpFile();
+            exit(0);
+          }
 	default: 
 	  {
 	    printHelpFile();
