@@ -240,9 +240,11 @@ boolean setupTree (All *tr, char *bootstrapFile)
   if (NOT(tr->nodep = (nodeptr *) malloc((2*tr->mxtips) * sizeof(nodeptr))))
     {
       printf("ERROR: Unable to obtain sufficient tree memory, too\n");
+      free(p0);
       return  FALSE;
     }
 
+  tr->p0 = p0;
   tr->nodep[0] = (node *) NULL;    /* Use as 1-based array */
 
   for (i = 1; i <= tips; i++)
@@ -315,7 +317,8 @@ boolean setupTree (All *tr, char *bootstrapFile)
 
   for(i = 0; i < tr->numBranches; i++)
     tr->partitionSmoothed[i] = FALSE;
-
+  
+  free(p0);
   return TRUE;
 }
 
@@ -1469,6 +1472,7 @@ void freeTree(All *tr)
   /* FOR_0_LIMIT(i,((tr->mxtips-1) )) */
   /*   free(tr->nodep[i]); */
   free(tr->nodep);
+  free(tr->p0);
 
   free(tr);
 }
