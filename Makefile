@@ -1,6 +1,6 @@
 CC = gcc 
 
-CFLAGS = -Wall -D_GNU_SOURCE
+CFLAGS = -Wall -D_GNU_SOURCE -fcommon
 LFLAGS = -lm
 
 ifeq ($(mode), debug)
