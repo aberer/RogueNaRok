@@ -2216,6 +2216,10 @@ int main(int argc, char *argv[])
 	  break;
 	}
       case 'h':
+        {
+          printHelpFile();
+          exit(0);
+        }
       default:	
 	{
 	  printHelpFile();
